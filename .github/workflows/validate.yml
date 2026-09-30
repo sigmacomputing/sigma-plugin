@@ -1,0 +1,33 @@
+name: Validate
+
+# Runs on every pull request, so a reviewer opens a diff that already passes.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned rather than "latest": the CLI's rules change between releases,
+      # and a moving target would turn a PR red with no change to the plugin.
+      # Bump it on purpose.
+      - name: Install the Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code@2.1.280
+
+      - name: Validate the marketplace
+        run: claude plugin validate --strict .
+
+      # xargs, not `find -exec ... \;`: find exits 0 even when the command it
+      # ran failed, which would make this step pass on a broken plugin.
+      - name: Validate every plugin manifest
+        run: find plugins/claude -path '*/.claude-plugin/plugin.json' -print0 | xargs -0 -n1 claude plugin validate --strict
+
+      - name: Validate every plugin's skills
+        run: find plugins/claude -mindepth 2 -maxdepth 2 -type d -name skills -print0 | xargs -0 -n1 claude plugin validate --strict
