@@ -1,0 +1,62 @@
+name: Release
+
+# Merging a version bump is the approval to publish. When main carries a
+# version with no release yet, tag it and attach one .plugin archive per
+# plugin. A push that doesn't change the version finds its release already
+# there and does nothing, and so does a main with no plugins in it yet.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out the version
+        id: version
+        run: |
+          if ! compgen -G 'plugins/claude/*/.claude-plugin/plugin.json' >/dev/null; then
+            echo "No plugins yet; nothing to release."
+            echo "none=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          version="$(python3 -c "import glob, json; print(json.load(open(sorted(glob.glob('plugins/claude/*/.claude-plugin/plugin.json'))[0]))['version'])")"
+          echo "tag=v${version}-beta" >> "$GITHUB_OUTPUT"
+          echo "slug=v${version//./-}-beta" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version is already released
+        id: released
+        if: steps.version.outputs.none != 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Archive each plugin
+        if: steps.released.outputs.exists == 'false'
+        env:
+          SLUG: ${{ steps.version.outputs.slug }}
+        run: |
+          mkdir dist
+          for dir in plugins/claude/*/; do
+            name="$(basename "$dir")"
+            (cd "$dir" && zip -qr "../../../dist/${name}-${SLUG}.plugin" . -x '*.DS_Store')
+          done
+
+      - name: Publish the release
+        if: steps.released.outputs.exists == 'false'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release create "$TAG" dist/*.plugin --target "$GITHUB_SHA" --title "$TAG" --prerelease --generate-notes
