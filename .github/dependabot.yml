@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Keeps the pinned action commits current. Each update arrives as a PR that
+  # Validate checks and a maintainer reviews.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Don't propose an action release until it's at least 3 days old.
+    cooldown:
+      default-days: 3
