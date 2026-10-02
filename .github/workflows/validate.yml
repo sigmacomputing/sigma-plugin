@@ -1,6 +1,9 @@
 name: Validate
 
 # Runs on every pull request, so a reviewer opens a diff that already passes.
+# A green run means the plugins are well-formed, not that they're safe: it
+# passes hooks, MCP server commands and bin/ files, so reviewers still read
+# those.
 on:
   pull_request:
   push:
@@ -12,14 +15,31 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      # validate needs nothing from the network once the CLI is installed.
+      DISABLE_TELEMETRY: "1"
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # validate reads through a symlinked manifest and prints what it points
+      # at, and the release zip would follow links too. Nothing here is one.
+      - name: Refuse symlinks
+        run: |
+          links="$(find . -path ./.git -prune -o -type l -print)"
+          if [ -n "$links" ]; then
+            echo "$links"
+            echo "::error::Symlinks aren't allowed in this repository."
+            exit 1
+          fi
 
       # Pinned rather than "latest": the CLI's rules change between releases,
       # and a moving target would turn a PR red with no change to the plugin.
-      # Bump it on purpose.
+      # Bump it on purpose, to a release at least 3 days old.
       - name: Install the Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code@2.1.280
+        run: npm install -g @anthropic-ai/claude-code@2.1.284
 
       - name: Validate the marketplace
         run: claude plugin validate --strict .
