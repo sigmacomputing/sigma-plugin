@@ -1,0 +1,3 @@
+# Every change to this repository needs a maintainer's review, including the
+# workflows that check and publish it.
+*    @sigmacomputing/sigma-plugin-maintainers
