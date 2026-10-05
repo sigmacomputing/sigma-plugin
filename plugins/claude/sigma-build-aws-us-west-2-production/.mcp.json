@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sigma_aws_us_west_2_production": {
+      "type": "http",
+      "url": "https://aws-api.sigmacomputing.com/mcp/build"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sigma_aws_ap_southeast_2_production": {
+      "type": "http",
+      "url": "https://api.au.aws.sigmacomputing.com/mcp/build"
+    }
+  }
+}

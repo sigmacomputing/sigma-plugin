@@ -1,0 +1,16 @@
+{
+  "name": "sigma-build-azure-australiaeast-production-marketplace",
+  "owner": {
+    "name": "Sigma Computing"
+  },
+  "metadata": {
+    "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Australia (New South Wales)."
+  },
+  "plugins": [
+    {
+      "name": "sigma-build-azure-australiaeast-production",
+      "source": "./",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Australia (New South Wales)."
+    }
+  ]
+}

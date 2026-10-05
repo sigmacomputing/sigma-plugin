@@ -1,0 +1,16 @@
+{
+  "name": "sigma-build-gcp-me-central2-production-marketplace",
+  "owner": {
+    "name": "Sigma Computing"
+  },
+  "metadata": {
+    "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP Saudi Arabia (Dammam)."
+  },
+  "plugins": [
+    {
+      "name": "sigma-build-gcp-me-central2-production",
+      "source": "./",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP Saudi Arabia (Dammam)."
+    }
+  ]
+}
