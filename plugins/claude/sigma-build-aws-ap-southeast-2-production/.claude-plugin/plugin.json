@@ -1,0 +1,22 @@
+{
+  "name": "sigma-build-aws-ap-southeast-2-production",
+  "displayName": "Sigma: AWS Asia Pacific (Sydney)",
+  "version": "0.11.6",
+  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney).",
+  "author": {
+    "name": "Sigma Computing"
+  },
+  "homepage": "https://www.sigmacomputing.com",
+  "repository": "https://github.com/sigmacomputing/sigma-plugin",
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "keywords": [
+    "sigma",
+    "sigma-computing",
+    "mcp",
+    "workbooks",
+    "aws",
+    "ap-southeast-2",
+    "production"
+  ]
+}
