@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sigma_gcp_us_central_1_production": {
+      "type": "http",
+      "url": "https://api.sigmacomputing.com/mcp/build"
+    }
+  }
+}

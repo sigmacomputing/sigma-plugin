@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sigma_aws_eu_central_1_production": {
+      "type": "http",
+      "url": "https://api.eu.aws.sigmacomputing.com/mcp/build"
+    }
+  }
+}
