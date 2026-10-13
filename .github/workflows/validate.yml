@@ -51,3 +51,79 @@ jobs:
 
       - name: Validate every plugin's skills
         run: find plugins/claude -mindepth 2 -maxdepth 2 -type d -name skills -print0 | xargs -0 -n1 claude plugin validate --strict
+
+      # The Claude CLI checks only Claude plugins. For Codex, Cursor and
+      # Cortex Code: every JSON file parses, every plugin folder has its
+      # manifest, each marketplace lists exactly the plugin folders there,
+      # and every manifest on every host, Claude's included, carries one
+      # version, the one Release tags.
+      - name: Check the other hosts' plugins
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          MANIFESTS = {
+              "claude": ".claude-plugin/plugin.json",
+              "codex": ".codex-plugin/plugin.json",
+              "cursor": ".cursor-plugin/plugin.json",
+              "coco": ".cortex-plugin/plugin.json",
+          }
+          MARKETPLACES = {
+              "codex": ".agents/plugins/marketplace.json",
+              "cursor": ".cursor-plugin/marketplace.json",
+          }
+          errors, versions = [], {}
+
+          def load(path):
+              try:
+                  return json.loads(Path(path).read_text())
+              except (OSError, ValueError) as e:
+                  errors.append(f"{path}: {e}")
+                  return None
+
+          for host, manifest in MANIFESTS.items():
+              host_dir = Path("plugins", host)
+              plugins = sorted(p for p in host_dir.iterdir() if p.is_dir()) if host_dir.is_dir() else []
+              if host != "claude":
+                  for f in sorted(host_dir.rglob("*.json")):
+                      load(f)
+              for plugin in plugins:
+                  if not (plugin / manifest).is_file():
+                      errors.append(f"{plugin} has no {manifest}")
+                      continue
+                  data = load(plugin / manifest)
+                  if data is not None:
+                      versions[str(plugin / manifest)] = data.get("version")
+              market = MARKETPLACES.get(host)
+              if market is None or not (plugins or Path(market).exists()):
+                  continue
+              data = load(market)
+              if data is None:
+                  continue
+              listed = set()
+              for entry in data.get("plugins", []):
+                  source = entry.get("source")
+                  if isinstance(source, dict):
+                      source = source.get("path")
+                  if not isinstance(source, str) or not (Path(source) / manifest).is_file():
+                      errors.append(f"{market}: {entry.get('name')} points at {source!r}, which has no {manifest}")
+                      continue
+                  listed.add(Path(source).resolve())
+                  if "version" in entry:
+                      versions[f"{market} ({entry.get('name')})"] = entry["version"]
+              unlisted = [str(p) for p in plugins if p.resolve() not in listed]
+              if unlisted:
+                  errors.append(f"{market} doesn't list {unlisted}")
+
+          if len(set(versions.values())) > 1:
+              by_version = {}
+              for where, v in versions.items():
+                  by_version.setdefault(v, []).append(where)
+              errors.append("plugins disagree on the version: " + "; ".join(
+                  f"{v!r} ({len(w)}, e.g. {w[0]})" for v, w in sorted(by_version.items(), key=str)))
+          for e in errors:
+              print(f"::error::{e}")
+          if errors:
+              raise SystemExit(1)
+          print(f"{len(versions)} manifests and marketplace entries at {sorted(set(versions.values()))}")
+          PY
