@@ -1,9 +1,10 @@
 name: Release
 
 # Merging a version bump is the approval to publish. When main carries a
-# version with no release yet, tag it and attach one .plugin archive per
-# plugin. A merge that doesn't change the version finds its release already
-# there and does nothing, and so does a main with no plugins in it yet.
+# version with no release yet, tag it and attach one archive per plugin per
+# host: .claude.plugin for Claude, and .codex.zip, .cursor.zip and .coco.zip
+# for the others. A merge that doesn't change the version finds its release
+# already there and does nothing, and so does a main with no plugins in it yet.
 #
 # Only main publishes, and there is no manual trigger: a run from any other
 # branch would publish that branch's unreviewed content, and tags here can't
@@ -29,25 +30,44 @@ jobs:
         with:
           persist-credentials: false
 
-      # Every plugin carries the same version; the tag is built from it, so
-      # anything other than X.Y.Z is refused before it reaches a tag name.
+      # Every plugin on every host carries the same version; the tag is built
+      # from it, so anything other than X.Y.Z is refused before it reaches a
+      # tag name. A plugin folder without its host's manifest, or a host this
+      # file doesn't know, is refused too, so nothing is archived unchecked.
       - name: Work out the version
         id: version
         run: |
           python3 - <<'PY'
-          import glob, json, os, re
-          manifests = sorted(glob.glob("plugins/claude/*/.claude-plugin/plugin.json"))
+          import json, os, re
+          from pathlib import Path
+          HOSTS = {
+              "claude": ".claude-plugin/plugin.json",
+              "codex": ".codex-plugin/plugin.json",
+              "cursor": ".cursor-plugin/plugin.json",
+              "coco": ".cortex-plugin/plugin.json",
+          }
+          manifests = []
+          if Path("plugins").is_dir():
+              for host_dir in sorted(Path("plugins").iterdir()):
+                  if host_dir.name not in HOSTS:
+                      raise SystemExit(f"plugins/{host_dir.name} isn't a known host: {sorted(HOSTS)}")
+                  for plugin in sorted(p for p in host_dir.iterdir() if p.is_dir()):
+                      manifest = plugin / HOSTS[host_dir.name]
+                      if not manifest.is_file():
+                          raise SystemExit(f"{plugin} has no {HOSTS[host_dir.name]}")
+                      manifests.append(manifest)
           with open(os.environ["GITHUB_OUTPUT"], "a") as out:
               if not manifests:
                   print("No plugins yet; nothing to release.")
                   out.write("none=true\n")
                   raise SystemExit
-              versions = {json.load(open(m))["version"] for m in manifests}
+              versions = {json.loads(m.read_text())["version"] for m in manifests}
               if len(versions) != 1:
                   raise SystemExit(f"Plugins disagree on the version: {sorted(versions)}")
               version = versions.pop()
               if not re.fullmatch(r"\d+\.\d+\.\d+", version):
                   raise SystemExit(f"Version {version!r} isn't X.Y.Z")
+              print(f"{len(manifests)} plugins at {version}")
               out.write(f"tag=v{version}-beta\n")
               out.write(f"slug=v{version.replace('.', '-')}-beta\n")
           PY
@@ -72,28 +92,42 @@ jobs:
             echo "::error::$TAG was released from a commit that isn't on main."
             exit 1
           fi
-          changed="$(gh api "repos/$GITHUB_REPOSITORY/compare/$TAG...$GITHUB_SHA" -q '[.files[]?.filename | select(startswith("plugins/") or startswith(".claude-plugin/"))] | length')"
+          # Every host's plugins and every marketplace file.
+          changed="$(gh api "repos/$GITHUB_REPOSITORY/compare/$TAG...$GITHUB_SHA" -q '[.files[]?.filename | select(startswith("plugins/") or startswith(".claude-plugin/") or startswith(".agents/") or startswith(".cursor-plugin/"))] | length')"
           if [ "$changed" != "0" ]; then
             echo "::error::The plugins changed since $TAG without a version bump."
             exit 1
           fi
           echo "exists=true" >> "$GITHUB_OUTPUT"
 
+      # A Claude archive holds the plugin folder's contents, which is what an
+      # upload install expects. The other hosts' archives hold the folder
+      # itself, so unzipping one gives a folder to install from.
       - name: Archive each plugin
         if: steps.released.outputs.exists == 'false'
         env:
           SLUG: ${{ steps.version.outputs.slug }}
         run: |
           mkdir dist
-          for dir in plugins/claude/*/; do
+          for dir in plugins/*/*/; do
+            host="$(basename "$(dirname "$dir")")"
             name="$(basename "$dir")"
             # -y stores a symlink as a link instead of following it.
-            (cd "$dir" && zip -qry "../../../dist/${name}-${SLUG}.plugin" . -x '*.DS_Store')
+            case "$host" in
+              claude)
+                (cd "$dir" && zip -qry "../../../dist/${name}-${SLUG}.claude.plugin" . -x '*.DS_Store') ;;
+              codex|cursor|coco)
+                (cd "plugins/$host" && zip -qry "../../dist/${name}-${SLUG}.${host}.zip" "$name" -x '*.DS_Store') ;;
+              *)
+                echo "::error::plugins/$host isn't a known host."
+                exit 1 ;;
+            esac
           done
+          ls dist
 
       - name: Publish the release
         if: steps.released.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
-        run: gh release create "$TAG" dist/*.plugin --target "$GITHUB_SHA" --title "$TAG" --prerelease --generate-notes
+        run: gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "$TAG" --prerelease --generate-notes
