@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "sigma_gcp_me_central2_production": {
+    "sigma": {
       "type": "http",
-      "url": "https://api.sa.gcp.sigmacomputing.com/mcp/build"
+      "url": "https://api.sa.gcp.sigmacomputing.com/mcp/v2"
     }
   }
 }

@@ -1,0 +1,219 @@
+{
+  "name": "sigma-build",
+  "owner": {
+    "name": "Sigma Computing"
+  },
+  "metadata": {
+    "description": "Sigma workbook quickstart skill over Sigma MCP \u2014 one variant per region and host."
+  },
+  "plugins": [
+    {
+      "name": "sigma-build-aws-us-west-2-production",
+      "source": "plugins/cursor/sigma-build-aws-us-west-2-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS US-West (Oregon).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "aws",
+        "us-west-2",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-gcp-us-central-1-production",
+      "source": "plugins/cursor/sigma-build-gcp-us-central-1-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP US-Central (Iowa).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "gcp",
+        "us-central-1",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-aws-eu-west-2-production",
+      "source": "plugins/cursor/sigma-build-aws-eu-west-2-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS UK (eu-west-2).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "aws",
+        "eu-west-2",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-aws-us-east-1-production",
+      "source": "plugins/cursor/sigma-build-aws-us-east-1-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS US-East (N. Virginia).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "aws",
+        "us-east-1",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-aws-ca-central-1-production",
+      "source": "plugins/cursor/sigma-build-aws-ca-central-1-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Canada (Central).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "aws",
+        "ca-central-1",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-aws-eu-central-1-production",
+      "source": "plugins/cursor/sigma-build-aws-eu-central-1-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS EU (Frankfurt).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "aws",
+        "eu-central-1",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-aws-ap-southeast-2-production",
+      "source": "plugins/cursor/sigma-build-aws-ap-southeast-2-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "aws",
+        "ap-southeast-2",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-azure-eastus2-production",
+      "source": "plugins/cursor/sigma-build-azure-eastus2-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure US (Virginia).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "azure",
+        "eastus2",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-azure-westeurope-production",
+      "source": "plugins/cursor/sigma-build-azure-westeurope-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure EU (Netherlands).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "azure",
+        "westeurope",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-azure-canadacentral-production",
+      "source": "plugins/cursor/sigma-build-azure-canadacentral-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Canada (Toronto).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "azure",
+        "canadacentral",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-azure-uksouth-production",
+      "source": "plugins/cursor/sigma-build-azure-uksouth-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure UK (London).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "azure",
+        "uksouth",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-azure-australiaeast-production",
+      "source": "plugins/cursor/sigma-build-azure-australiaeast-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Australia (New South Wales).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "azure",
+        "australiaeast",
+        "production"
+      ]
+    },
+    {
+      "name": "sigma-build-gcp-me-central2-production",
+      "source": "plugins/cursor/sigma-build-gcp-me-central2-production",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP Saudi Arabia (Dammam).",
+      "version": "0.11.9",
+      "category": "productivity",
+      "keywords": [
+        "sigma",
+        "sigma-computing",
+        "mcp",
+        "workbooks",
+        "gcp",
+        "me-central2",
+        "production"
+      ]
+    }
+  ]
+}

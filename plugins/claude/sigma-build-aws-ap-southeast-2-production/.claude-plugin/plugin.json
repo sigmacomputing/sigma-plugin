@@ -1,7 +1,7 @@
 {
   "name": "sigma-build-aws-ap-southeast-2-production",
-  "displayName": "Sigma: AWS Asia Pacific (Sydney)",
-  "version": "0.11.6",
+  "displayName": "Sigma",
+  "version": "0.11.9",
   "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney).",
   "author": {
     "name": "Sigma Computing"

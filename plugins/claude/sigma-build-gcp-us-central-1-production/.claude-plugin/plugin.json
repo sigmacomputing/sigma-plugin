@@ -1,7 +1,7 @@
 {
   "name": "sigma-build-gcp-us-central-1-production",
-  "displayName": "Sigma: GCP US-Central (Iowa)",
-  "version": "0.11.6",
+  "displayName": "Sigma",
+  "version": "0.11.9",
   "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP US-Central (Iowa).",
   "author": {
     "name": "Sigma Computing"

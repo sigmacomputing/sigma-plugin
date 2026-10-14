@@ -1,15 +1,17 @@
-# Sigma plugin for Claude
+# Sigma plugins for AI assistants
 
-Build a finished Sigma workbook from a conversation. The plugin gives Claude a
-connector to your Sigma organization and a skill that assembles dashboards and
-data apps from pre-styled components, then checks its own work with
-screenshots.
+Build a finished Sigma workbook from a conversation. Each plugin gives your AI
+assistant a connector to your Sigma organization and a skill that assembles
+dashboards and data apps from pre-styled components, then checks its own work
+with screenshots. The same plugins are built for Claude (Claude Code, Claude
+and Cowork), Codex and ChatGPT, Cursor, and Cortex Code.
 
-## Install
+## Pick your region
 
 Sigma hosts each organization in one region, so install the plugin that
 matches yours. To find it, open **Administration > Account > General Settings**
-in Sigma and read the **Cloud** field under **Site**.
+in Sigma and read the **Cloud** field under **Site**. A plugin has the same
+name on every assistant.
 
 | Region | Plugin |
 |---|---|
@@ -27,21 +29,59 @@ in Sigma and read the **Cloud** field under **Site**.
 | GCP US-Central (Iowa) | `sigma-build-gcp-us-central-1-production` |
 | GCP Saudi Arabia (Dammam) | `sigma-build-gcp-me-central2-production` |
 
-In Claude Code:
+After installing, connect the `sigma` connector when your assistant prompts
+you and sign in with your Sigma account. Each plugin's folder has a README
+that says what it connects to and sends.
+
+Every [release](../../releases) attaches one archive per plugin and
+assistant, named `<plugin>-<version>` plus `.claude.plugin`, `.codex.zip`,
+`.cursor.zip` or `.coco.zip`.
+
+## Install in Claude Code
 
 ```
 /plugin marketplace add sigmacomputing/sigma-plugin
 /plugin install <plugin>@sigma-build
 ```
 
-In Claude or Cowork, open **Customize > Plugins**, add the marketplace
-`sigmacomputing/sigma-plugin`, and install the plugin for your region. You can
-also upload a `.plugin` file from the [releases](../../releases) page.
+## Install in Claude or Cowork
 
-After installing, connect the `sigma_*` connector when Claude prompts you and
-sign in with your Sigma account.
+Open **Customize > Plugins**, add the marketplace
+`sigmacomputing/sigma-plugin`, and install the plugin for your region. You can also
+upload its `.claude.plugin` file from the [releases](../../releases) page.
 
-Each plugin's folder has a README that says what it connects to and sends.
+## Install in Codex or ChatGPT
+
+Add this repository as a marketplace in the Codex CLI or the ChatGPT desktop
+app:
+
+```
+codex plugin marketplace add https://github.com/sigmacomputing/sigma-plugin.git
+```
+
+Restart the ChatGPT desktop app, open **Plugins** from a Codex session, choose
+the `sigma-build` marketplace, and install the plugin for your region. The
+Codex IDE extension doesn't support plugins yet.
+
+## Install in Cursor
+
+From the Cursor dashboard, open **Plugins**, import this repository as a team
+marketplace, and install the plugin for your region.
+
+To try a plugin in one project instead, download its `.cursor.zip` file from
+the [releases](../../releases) page and unzip it. Copy its `skills/` into
+`.cursor/skills/` and its `mcp.json` entries into `.cursor/mcp.json`.
+
+## Install in Cortex Code
+
+Download the plugin's `.coco.zip` file from the [releases](../../releases)
+page and unzip it. In Cortex Code Desktop, open **Plugins > Add Local Plugin**
+and pick the plugin's folder, the one that holds `.cortex-plugin/plugin.json`.
+The CLI takes the same folder:
+
+```
+cortex plugin install /path/to/sigma-build-aws-us-west-2-production
+```
 
 ## Try it
 

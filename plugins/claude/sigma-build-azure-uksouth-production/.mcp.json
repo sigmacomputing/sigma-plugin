@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "sigma_azure_uksouth_production": {
+    "sigma": {
       "type": "http",
-      "url": "https://api.uk.azure.sigmacomputing.com/mcp/build"
+      "url": "https://api.uk.azure.sigmacomputing.com/mcp/v2"
     }
   }
 }
