@@ -1,7 +1,7 @@
 {
   "name": "sigma-build-gcp-me-central2-production",
-  "displayName": "Sigma: GCP Saudi Arabia (Dammam)",
-  "version": "0.11.6",
+  "displayName": "Sigma",
+  "version": "0.11.9",
   "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP Saudi Arabia (Dammam).",
   "author": {
     "name": "Sigma Computing"

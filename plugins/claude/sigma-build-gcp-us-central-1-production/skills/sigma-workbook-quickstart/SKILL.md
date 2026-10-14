@@ -18,8 +18,7 @@ description: >-
   tools instead.
 ---
 
-**Environment:** GCP US-Central (Iowa) /mcp/build
-- `sigma_gcp_us_central_1_production` → `https://api.sigmacomputing.com/mcp/build`
+**Environment:** `sigma` → `https://api.sigmacomputing.com/mcp/v2`
 
 # Sigma Quickstart (Code Mode)
 
@@ -30,7 +29,7 @@ a derivation), and do not restyle blocks except where a block's notes say to.
 Spend your effort on the data, the composition, and the copy.
 
 Never the REST API. One connector — the one named under **Environment** above
-(`/mcp/build`) — with all the tools:
+(`/mcp/v2`) — with all the tools:
 
 | Tools | Use for |
 |---|---|

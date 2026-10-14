@@ -1,0 +1,35 @@
+{
+  "name": "sigma-build-aws-ap-southeast-2-production",
+  "version": "0.11.9",
+  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney).",
+  "author": {
+    "name": "Sigma Computing"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "sigma",
+    "sigma-computing",
+    "mcp",
+    "workbooks",
+    "aws",
+    "ap-southeast-2",
+    "production"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Sigma",
+    "shortDescription": "Build Sigma dashboards and data apps from a conversation.",
+    "longDescription": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney).",
+    "developerName": "Sigma Computing",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Build a Sigma workbook from my requirements.",
+      "Update an existing Sigma workbook."
+    ]
+  }
+}

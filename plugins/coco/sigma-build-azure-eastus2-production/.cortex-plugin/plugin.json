@@ -1,0 +1,20 @@
+{
+  "name": "sigma-build-azure-eastus2-production",
+  "version": "0.11.9",
+  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure US (Virginia).",
+  "author": {
+    "name": "Sigma Computing"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "sigma",
+    "sigma-computing",
+    "mcp",
+    "workbooks",
+    "azure",
+    "eastus2",
+    "production"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

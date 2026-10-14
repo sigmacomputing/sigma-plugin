@@ -1,0 +1,35 @@
+{
+  "name": "sigma-build-azure-uksouth-production",
+  "version": "0.11.9",
+  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure UK (London).",
+  "author": {
+    "name": "Sigma Computing"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "sigma",
+    "sigma-computing",
+    "mcp",
+    "workbooks",
+    "azure",
+    "uksouth",
+    "production"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Sigma",
+    "shortDescription": "Build Sigma dashboards and data apps from a conversation.",
+    "longDescription": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure UK (London).",
+    "developerName": "Sigma Computing",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Build a Sigma workbook from my requirements.",
+      "Update an existing Sigma workbook."
+    ]
+  }
+}

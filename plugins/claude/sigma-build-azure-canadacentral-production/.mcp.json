@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "sigma_azure_canadacentral_production": {
+    "sigma": {
       "type": "http",
-      "url": "https://api.ca.azure.sigmacomputing.com/mcp/build"
+      "url": "https://api.ca.azure.sigmacomputing.com/mcp/v2"
     }
   }
 }

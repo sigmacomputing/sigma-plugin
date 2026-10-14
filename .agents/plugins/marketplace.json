@@ -1,0 +1,164 @@
+{
+  "name": "sigma-build",
+  "interface": {
+    "displayName": "Sigma"
+  },
+  "plugins": [
+    {
+      "name": "sigma-build-aws-us-west-2-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-aws-us-west-2-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-gcp-us-central-1-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-gcp-us-central-1-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-aws-eu-west-2-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-aws-eu-west-2-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-aws-us-east-1-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-aws-us-east-1-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-aws-ca-central-1-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-aws-ca-central-1-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-aws-eu-central-1-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-aws-eu-central-1-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-aws-ap-southeast-2-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-aws-ap-southeast-2-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-azure-eastus2-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-azure-eastus2-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-azure-westeurope-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-azure-westeurope-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-azure-canadacentral-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-azure-canadacentral-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-azure-uksouth-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-azure-uksouth-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-azure-australiaeast-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-azure-australiaeast-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "sigma-build-gcp-me-central2-production",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/sigma-build-gcp-me-central2-production"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

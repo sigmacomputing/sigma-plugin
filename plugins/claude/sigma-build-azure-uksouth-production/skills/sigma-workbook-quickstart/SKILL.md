@@ -18,8 +18,7 @@ description: >-
   tools instead.
 ---
 
-**Environment:** Azure UK (London) /mcp/build
-- `sigma_azure_uksouth_production` → `https://api.uk.azure.sigmacomputing.com/mcp/build`
+**Environment:** `sigma` → `https://api.uk.azure.sigmacomputing.com/mcp/v2`
 
 # Sigma Quickstart (Code Mode)
 
@@ -30,7 +29,7 @@ a derivation), and do not restyle blocks except where a block's notes say to.
 Spend your effort on the data, the composition, and the copy.
 
 Never the REST API. One connector — the one named under **Environment** above
-(`/mcp/build`) — with all the tools:
+(`/mcp/v2`) — with all the tools:
 
 | Tools | Use for |
 |---|---|

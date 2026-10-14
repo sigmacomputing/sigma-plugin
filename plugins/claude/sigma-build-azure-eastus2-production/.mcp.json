@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "sigma_azure_eastus2_production": {
+    "sigma": {
       "type": "http",
-      "url": "https://api.us.azure.sigmacomputing.com/mcp/build"
+      "url": "https://api.us.azure.sigmacomputing.com/mcp/v2"
     }
   }
 }
