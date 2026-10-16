@@ -74,14 +74,18 @@ the [releases](../../releases) page and unzip it. Copy its `skills/` into
 
 ## Install in Cortex Code
 
-Download the plugin's `.coco.zip` file from the [releases](../../releases)
-page and unzip it. In Cortex Code Desktop, open **Plugins > Add Local Plugin**
-and pick the plugin's folder, the one that holds `.cortex-plugin/plugin.json`.
-The CLI takes the same folder:
+Install the plugin for your region straight from this repository:
 
 ```
-cortex plugin install /path/to/sigma-build-aws-us-west-2-production
+cortex plugin install sigmacomputing/sigma-plugin/plugins/coco/<plugin>
 ```
+
+For example, `cortex plugin install sigmacomputing/sigma-plugin/plugins/coco/sigma-build-aws-us-west-2-production`.
+
+If you need a file instead, download the plugin's `.coco.zip` file from the
+[releases](../../releases) page and unzip it. In Cortex Code Desktop, open
+**Plugins > Add Local Plugin** and pick the folder that holds
+`.cortex-plugin/plugin.json`.
 
 ## Try it
 

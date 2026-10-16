@@ -1,7 +1,7 @@
 {
   "name": "sigma-build-azure-uksouth-production",
-  "version": "0.11.9",
-  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure UK (London).",
+  "version": "0.11.11",
+  "description": "Azure UK (London): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"
   },
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Sigma",
     "shortDescription": "Build Sigma dashboards and data apps from a conversation.",
-    "longDescription": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure UK (London).",
+    "longDescription": "Azure UK (London): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
     "developerName": "Sigma Computing",
     "category": "Productivity",
     "capabilities": [

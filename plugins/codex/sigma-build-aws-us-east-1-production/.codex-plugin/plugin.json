@@ -1,7 +1,7 @@
 {
   "name": "sigma-build-aws-us-east-1-production",
-  "version": "0.11.9",
-  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS US-East (N. Virginia).",
+  "version": "0.11.11",
+  "description": "AWS US-East (N. Virginia): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"
   },
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Sigma",
     "shortDescription": "Build Sigma dashboards and data apps from a conversation.",
-    "longDescription": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS US-East (N. Virginia).",
+    "longDescription": "AWS US-East (N. Virginia): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
     "developerName": "Sigma Computing",
     "category": "Productivity",
     "capabilities": [
