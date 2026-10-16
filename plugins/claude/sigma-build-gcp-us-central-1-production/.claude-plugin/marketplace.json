@@ -4,13 +4,13 @@
     "name": "Sigma Computing"
   },
   "metadata": {
-    "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP US-Central (Iowa)."
+    "description": "GCP US-Central (Iowa): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization."
   },
   "plugins": [
     {
       "name": "sigma-build-gcp-us-central-1-production",
       "source": "./",
-      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in GCP US-Central (Iowa)."
+      "description": "GCP US-Central (Iowa): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization."
     }
   ]
 }

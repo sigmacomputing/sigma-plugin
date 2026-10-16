@@ -11,15 +11,16 @@ open **Administration > Account > General Settings** in Sigma and read the
 
 ## Install
 
-Download its `.coco.zip` file from the
-[releases](https://github.com/sigmacomputing/sigma-plugin/releases) page and
-unzip it. In Cortex Code Desktop, open **Plugins > Add Local Plugin** and pick
-the `sigma-build-azure-australiaeast-production` folder, or install it from
-the CLI:
+Install it straight from GitHub:
 
 ```
-cortex plugin install /path/to/sigma-build-azure-australiaeast-production
+cortex plugin install sigmacomputing/sigma-plugin/plugins/coco/sigma-build-azure-australiaeast-production
 ```
+
+If you need a file instead, download its `.coco.zip` file from the
+[releases](https://github.com/sigmacomputing/sigma-plugin/releases) page and
+unzip it. In Cortex Code Desktop, open **Plugins > Add Local Plugin** and pick
+the `sigma-build-azure-australiaeast-production` folder.
 
 After installing, sign in to the `sigma` connector with your Sigma account
 when Cortex Code prompts you.
