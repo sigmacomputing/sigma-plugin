@@ -4,13 +4,13 @@
     "name": "Sigma Computing"
   },
   "metadata": {
-    "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney)."
+    "description": "AWS Asia Pacific (Sydney): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization."
   },
   "plugins": [
     {
       "name": "sigma-build-aws-ap-southeast-2-production",
       "source": "./",
-      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in AWS Asia Pacific (Sydney)."
+      "description": "AWS Asia Pacific (Sydney): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization."
     }
   ]
 }

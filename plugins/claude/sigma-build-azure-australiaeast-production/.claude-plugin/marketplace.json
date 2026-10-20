@@ -4,13 +4,13 @@
     "name": "Sigma Computing"
   },
   "metadata": {
-    "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Australia (New South Wales)."
+    "description": "Azure Australia (New South Wales): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization."
   },
   "plugins": [
     {
       "name": "sigma-build-azure-australiaeast-production",
       "source": "./",
-      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Australia (New South Wales)."
+      "description": "Azure Australia (New South Wales): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization."
     }
   ]
 }

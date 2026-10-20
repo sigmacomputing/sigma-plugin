@@ -1,7 +1,7 @@
 {
   "name": "sigma-build-azure-canadacentral-production",
-  "version": "0.11.9",
-  "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization in Azure Canada (Toronto).",
+  "version": "0.11.11",
+  "description": "Azure Canada (Toronto): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"
   },
