@@ -10,7 +10,7 @@ hero.set_spacing('small')
 hero.set_background_color(PRIMARY)
 hero.set_border(sigma.border.solid(radius='round'))   # radius alone rounds the corners — draws no line
 gap = sigma.formula.subtract(sigma.formula.sum(base.get_column_by_name('Target')), sigma.formula.sum(base.get_column_by_name('Revenue')))
-gap_text = sigma.formula.ampersand(sigma.formula.const_text('$'), sigma.formula.ampersand(sigma.formula.text(sigma.formula.round(sigma.formula.divide(gap, sigma.formula.const_num(1000000)), 1)), sigma.formula.const_text('M')))   # pre-formatted (blocks/formulas.md) — bound bare, a raw float in 24px type
+money = sigma.format.format('currency_si', 1, '$')   # a bound value takes its display format here, never in the placeholder
 copy = hero.add_container()          # structural: statement + support line read as one unit
 copy.set_frame(1, 1, 15, 5)
 copy.set_column_density('high')
@@ -18,7 +18,7 @@ copy.set_padding(False)
 copy.set_gap(False)
 copy.set_background_color(None)
 copy.set_border(None)
-hs = copy.add_text('### <span style="color: #ffffff">{{Gap}} to close the year</span>', formulas={'Gap': gap_text})
+hs = copy.add_text('### <span style="color: #ffffff">{{Gap}} to close the year</span>', formulas={'Gap': (gap, money)})
 hs.set_frame(1, 1, 24, 3)
 hs.set_vertical_align('middle')
 hsub = copy.add_text('<p class="p-small"><span style="color: ' + EDGE + '">Plan says <what closing it takes, one line>.</span></p>')

@@ -2,12 +2,21 @@
 
 Seeing one whole record is the move a reader reaches for first on any
 table of records, so **every detail table on a work surface carries it**.
-A **click cannot carry the row**: an effect's value is a literal, another
-control's live value, or a formula over the *whole* element, and the SDK
-has no Selection source — so a value read off the clicked row lands null
-and the record renders blank. Trigger conditions do read the clicked row;
-values never do. A **picker** sets the record instead. Three surfaces
-hold it, and the reader's next move picks which:
+Two things set the record, and they work together. A **row click** sets the
+card, sets the picker, and opens the overlay:
+`tbl.on_select('open', [sigma.action.setControlValueEffect.set_control_value(pick, key), sigma.action.setSingleRowViewEffect.select_row(card, key), sigma.action.overlayEffects.open_overlay(<overlay>)])`
+with `key` a column **of the clicked table** — `tbl.get_column_by_name('<KEY>')`,
+`lt.list_primary_key_columns()[0]` on a linked table; a column of any other
+element raises at build. Drop `set_control_value` when the page has no picker.
+On a table with editable cells, add `column=key` to `on_select` — unscoped, a
+click on an editable cell fires it too.
+
+A **picker** (the fence below) is how a reader jumps to a record by name, and
+what filters the record's own rows: put those tables' key columns in its
+`target`, and the click's `set_control_value` moves them with it. With no
+table to click, the picker alone sets the record — drop the click effects.
+
+Three surfaces hold it, and the reader's next move picks which:
 
 | Surface | Reach for it when | Width |
 |---|---|---|
@@ -17,18 +26,22 @@ hold it, and the reader's next move picks which:
 
 The record is a **single-row container**: an element with its own frame
 that is also a host, so text, value lists, KPIs, and buttons go inside it
-and read the row it shows. `select_row` on the picker's `on_change` sets
-that row; it opens on `initial_value` and holds the last row set, so
-`initial_value` is a **real key from step 3** — the surface must read
-correctly before anything is picked. The **key column is also what the
+and read the row it shows. `select_row` on the table's `on_select` or the
+picker's `on_change` sets that row; it opens on `initial_value` and holds
+the last row set, so `initial_value` is a **real key from step 3** — the
+surface must read correctly before anything is picked. The **key column is also what the
 picker lists**, so key on the column a reader recognises — a name, a ref
-— and fall back to an id only when nothing readable is unique. Controls
-never sit on the overlay itself — on a container in it, and the picker on
-the list's own card.
+— and fall back to an id only when nothing readable is unique. A control
+can sit on the overlay itself; put it on a container in it when it needs a
+layout of its own, and put the record picker on the list's own card.
 
 Its source is **one row per key**, the rule of `blocks/input-table.md`: a
-grouped table, never a raw one. The container filters that source to the
-key, so of its columns only the grouping key and the **calculations** hold
+grouped table or a linked input table, never a raw one. Everything the card
+shows binds to the card's own columns, `card.list_columns()` — the source
+table's handles read the whole table in there. They come in display order:
+a grouped source lists its key first, a linked table's key may not be first,
+so look each up by name (`by[c.name()] = c`, as `blocks/queue.md` does). The
+container filters that source to the key, so of its columns only the grouping key and the **calculations** hold
 one value — the base columns trailing them render the literal text
 `Multiple values`. Every attribute the card shows is a calculation too — a
 label's is `sigma.formula.max`.
@@ -71,8 +84,15 @@ m.on_primary_click('done', [sigma.action.overlayEffects.close_overlay()])
 pick = sigma.control.add_list_control(sec, target=one.get_column_by_name('<KEY>'), allows_multi=False, allows_search=True)
 pick.set_name('<Record>')                  # sec = the card holding the list; targeting `one` (the container's own source) leaves that list whole
 pick.set_frame(17, 1, 8, 2)                # the card's label row, so its subline narrows to (1, 2, 16, 1)
-pick.on_change('open detail', [
+opens = pick.on_change('open detail', [
     sigma.action.setSingleRowViewEffect.select_row(card, pick),
+    sigma.action.overlayEffects.open_overlay(m),
+])
+opens.set_condition(sigma.formula.is_not_null(pick))   # clearing the picker fires on_change too — unguarded it opens an empty card
+kc = tbl.get_column_by_name('<KEY>')       # tbl = the table the reader clicks; its own column, never another element's
+tbl.on_select('open detail', [
+    sigma.action.setControlValueEffect.set_control_value(pick, kc),
+    sigma.action.setSingleRowViewEffect.select_row(card, kc),
     sigma.action.overlayEffects.open_overlay(m),
 ])
 ```
@@ -92,16 +112,17 @@ if not (isinstance(ov, Modal) and isinstance(host, Container)):
 card = host.get_element('<CARD ID>')
 if not (isinstance(el, ListControl) and isinstance(card, SingleRowContainer)):
     raise RuntimeError('re-fetch')
-el.on_change('open detail', [
+for s in el.list_action_sequences():       # on_change and on_select add a sequence each call — drop the old one or both fire
+    s.delete()
+opens = el.on_change('open detail', [
     sigma.action.setSingleRowViewEffect.select_row(card, el),
     sigma.action.overlayEffects.open_overlay(ov),
 ])
+opens.set_condition(sigma.formula.is_not_null(el))
 ```
 
 - A button drives the same card with a constant:
   `b.on_click('<name>', [sigma.action.setSingleRowViewEffect.select_row(card, sigma.formula.const_text('<KEY VALUE>'))])`.
-  Never open the overlay on `tbl.on_select`: the click cannot say which
-  record, so it would open on whatever was last picked.
 - The record's own **rows** under the card — its orders, its line items —
   need the room: `body.set_frame(1, 1, 12, 18)`, the card still `(1, 1, 12,
   8)`, that table at `(1, 9, 12, 10)`. Add its key column to the picker's
@@ -119,9 +140,9 @@ el.on_change('open detail', [
   `drawer = sigma.workbook.add_drawer('Account detail')` ·
   `drawer.set_width('medium')` ·
   `drawer.set_header(title='Account detail', show_close_icon=True)`, and
-  `open_overlay(drawer)` on the picker. It has no footer, so its actions
-  are buttons in the body (`blocks/queue.md`), and `set_width` takes only
-  the three sizes above — a modal's `x_small`/`x_large` raise on one.
+  `open_overlay(drawer)` on the row click or the picker. It has no footer,
+  so its actions are buttons in the body (`blocks/queue.md`), and
+  `set_width` takes only the three sizes above — a modal's `x_small`/`x_large` raise on one.
 - **Info popover** — the "what am I looking at" affordance on a card's
   label row, quiet trigger included:
   ```python
@@ -142,8 +163,8 @@ el.on_change('open detail', [
 ## Record card — the picked row, on the page
 
 The same container as an **8-column card beside the list** (pair 16/8)
-instead of inside an overlay: pick a record and the card reads it, no
-overlay to open — the shape a Ledger reaches for first, since the list
+instead of inside an overlay: click or pick a record and the card reads it,
+no overlay to open — the shape a Ledger reaches for first, since the list
 and the record then sit side by side. Only the wrapper changes — the
 source, the `cols` unpack, and the bindings are the fence above, on those
 same 12-wide frames: a
@@ -161,7 +182,8 @@ eye = card.add_text('<p class="p-small"><span style="color: ' + MUTED + '">{{Kin
 eye.set_frame(1, 1, 12, 1)                 # the eyebrow takes row 1, so name moves to (1, 2, 12, 2) and facts to (1, 5, 12, 5)
 go = card.add_button('<Next step> →')      # soft button, stretched (blocks/buttons.md)
 go.set_frame(1, 11, 12, 2)
-pick.on_change('pick', [sigma.action.setSingleRowViewEffect.select_row(card, pick)])   # the picker of the fence above, on the list's card
+tbl.on_select('pick', [sigma.action.setSingleRowViewEffect.select_row(card, tbl.get_column_by_name('<KEY>'))])   # the list the reader clicks
+pick.on_change('pick', [sigma.action.setSingleRowViewEffect.select_row(card, pick)])   # and the picker of the fence above, on the list's card
 ```
 
 - Aligned label/value columns instead of the far-edge look:

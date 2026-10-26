@@ -1,6 +1,6 @@
 {
   "name": "sigma-build-aws-us-east-1-production",
-  "version": "0.11.12",
+  "version": "0.11.14",
   "description": "AWS US-East (N. Virginia): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"

@@ -6,6 +6,7 @@ Two elements, chosen by how the data locates a mark:
 
 - `describe` shows a latitude **and** longitude pair → `add_point_map`
 - it shows a named area (country, state, county, ZIP, province) → `add_region_map`
+- it shows geometry (shapes, not points or names) → `add_geography_map(src)`; the setters are in the module docs (`## SDK docs`)
 
 ```python
 mp = sec.add_point_map(src)
@@ -16,8 +17,6 @@ mp.set_point_size((sigma.formula.sum(mp.get_column_by_name('Revenue')), 'Total r
 mp.set_color_scale((sigma.formula.sum(mp.get_column_by_name('Revenue')), 'Shaded revenue'))
 mp.set_label([mp.get_column_by_name('<SITE NAME>')])
 mp.get_column_by_name('Total revenue').set_format('currency_si', decimals=1, currency='$')
-mp.title_style().set_visible(False)
-mp.set_background_color(None)
 mp.set_padding(False)
 ```
 
@@ -34,7 +33,8 @@ rm.set_color_scale((sigma.formula.sum(rm.get_column_by_name('Revenue')), 'Total 
   `'us-zipcode'` `'us-cbsa'` `'us-postal-place'` `'ca-province'`. It must
   match what the column actually holds — `query` the distinct values first;
   two-letter codes and full names are both accepted, mixed ones are not.
-- `set_color_scale` binds the measure; the gradient takes the workbook palette.
+- Never `set_background_color(None)` on a map: a transparent map renders its legend as a dark panel of dim, illegible text.
+- `set_color_scale` binds the measure; the gradient takes the workbook palette. To pin it, `mp.color_scale_scheme().set_palette([TINT, SERIES])` after binding.
 - Lat/long are **grouping keys**, so rows sharing a coordinate collapse into
   one mark and the measure aggregates across them — which is what you want
   per site, and wrong per transaction. If each row must be its own mark, the

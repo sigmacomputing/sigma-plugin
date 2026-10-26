@@ -4,85 +4,13 @@
     "name": "Sigma Computing"
   },
   "metadata": {
-    "description": "Sigma plugins for Claude, one per Sigma region."
+    "description": "Sigma Build Plugin: build finished dashboards and data apps from a conversation."
   },
   "plugins": [
     {
-      "name": "sigma-build-aws-us-west-2-production",
-      "source": "./plugins/claude/sigma-build-aws-us-west-2-production",
-      "description": "AWS US-West (Oregon): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-gcp-us-central-1-production",
-      "source": "./plugins/claude/sigma-build-gcp-us-central-1-production",
-      "description": "GCP US-Central (Iowa): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-aws-eu-west-2-production",
-      "source": "./plugins/claude/sigma-build-aws-eu-west-2-production",
-      "description": "AWS UK (eu-west-2): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-aws-us-east-1-production",
-      "source": "./plugins/claude/sigma-build-aws-us-east-1-production",
-      "description": "AWS US-East (N. Virginia): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-aws-ca-central-1-production",
-      "source": "./plugins/claude/sigma-build-aws-ca-central-1-production",
-      "description": "AWS Canada (Central): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-aws-eu-central-1-production",
-      "source": "./plugins/claude/sigma-build-aws-eu-central-1-production",
-      "description": "AWS EU (Frankfurt): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-aws-ap-southeast-2-production",
-      "source": "./plugins/claude/sigma-build-aws-ap-southeast-2-production",
-      "description": "AWS Asia Pacific (Sydney): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-azure-eastus2-production",
-      "source": "./plugins/claude/sigma-build-azure-eastus2-production",
-      "description": "Azure US (Virginia): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-azure-westeurope-production",
-      "source": "./plugins/claude/sigma-build-azure-westeurope-production",
-      "description": "Azure EU (Netherlands): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-azure-canadacentral-production",
-      "source": "./plugins/claude/sigma-build-azure-canadacentral-production",
-      "description": "Azure Canada (Toronto): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-azure-uksouth-production",
-      "source": "./plugins/claude/sigma-build-azure-uksouth-production",
-      "description": "Azure UK (London): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-azure-australiaeast-production",
-      "source": "./plugins/claude/sigma-build-azure-australiaeast-production",
-      "description": "Azure Australia (New South Wales): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
-      "category": "productivity"
-    },
-    {
-      "name": "sigma-build-gcp-me-central2-production",
-      "source": "./plugins/claude/sigma-build-gcp-me-central2-production",
-      "description": "GCP Saudi Arabia (Dammam): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
+      "name": "sigma-build",
+      "source": "./plugins/claude/sigma-build",
+      "description": "Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
       "category": "productivity"
     }
   ]

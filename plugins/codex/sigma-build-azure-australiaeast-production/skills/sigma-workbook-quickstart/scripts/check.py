@@ -32,8 +32,9 @@ DATA = Path(__file__).with_name("design-system.json")
 # The builtins a program may call (SKILL.md, "Program rules"). Anything else
 # that resolves to a Python builtin is a construct the runtime does not expose.
 ALLOWED_BUILTINS = {
-    "print", "len", "any", "enumerate", "zip", "range", "list", "reversed",
-    "sorted", "min", "max", "str", "isinstance", "datetime", "RuntimeError",
+    "print", "len", "int", "any", "enumerate", "zip", "range", "list", "reversed",
+    "sorted", "min", "max", "str", "isinstance", "type", "datetime", "timedelta", "RuntimeError",
+    "Exception", "ValueError", "TypeError", "KeyError", "IndexError", "ZeroDivisionError",
 }
 
 # `add_*` calls that do not make a framed element.
@@ -41,6 +42,9 @@ NON_ELEMENT = {
     "add_column", "add_editable_column", "add_formula_column",
     "add_conditional_format", "add_source", "add_system_columns",
     "add_pivot_row", "add_pivot_column", "add_pivot_value", "add_ref_band",
+    "add_metric", "add_formula", "add_trendline", "add_ref_line", "add_tab",
+    "add_tables", "add_action", "add_ai_column", "add_folder", "add_field",
+    "add_relationship", "add_source_column",
 }
 OVERLAY = {"add_popover", "add_modal", "add_drawer"}
 PANEL = {"add_header", "add_sidebar"}
@@ -98,6 +102,7 @@ class Element:
         self.frame = None
         self.frame_line = None
         self.unfoldable = False
+        self.density = None
 
 
 def load_design_system():
@@ -113,58 +118,94 @@ def load_design_system():
 def check_dialect(tree, source, findings):
     assigned = collect_assigned(tree)
     nullable = collect_nullable(tree)
+    dict_names = collect_dicts(tree)
     tokens_used = set()
     tokens_assigned = set()
     design = load_design_system()
     token_names = set(design["tokens"]) if design else set()
+    type_names = collect_type_names(tree)
+    guarded = collect_guarded_calls(tree)
 
     for node in ast.walk(tree):
         line = getattr(node, "lineno", None)
 
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            findings.append(Finding("ERROR", line, "no-def",
-                "`def` is not in the dialect — inline the calls instead"))
+            findings.append(Finding("WARN", line, "def-unchecked",
+                "frames inside a `def` are not folded here, and the runtime needs "
+                "every parameter and the return annotated — inline the calls"))
+            parameters = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+            if node.returns is None or any(p.annotation is None for p in parameters):
+                findings.append(Finding("ERROR", line, "def-unannotated",
+                    "a `def` needs every parameter and its return annotated"))
         elif isinstance(node, ast.ClassDef):
             findings.append(Finding("ERROR", line, "no-class", "`class` is not in the dialect"))
+        elif isinstance(node, ast.For) and node.orelse:
+            findings.append(Finding("ERROR", line, "no-for-else",
+                "`else` on a `for` loop is not in the dialect"))
         elif isinstance(node, ast.Lambda):
             findings.append(Finding("ERROR", line, "no-lambda", "`lambda` is not in the dialect"))
         elif isinstance(node, (ast.While,)):
             findings.append(Finding("ERROR", line, "no-while",
                 "`while` is not in the dialect — a `for` over a list is"))
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            findings.append(Finding("ERROR", line, "no-import",
-                "a program imports nothing — `sigma` is already bound"))
-        elif isinstance(node, (ast.Try, ast.With, ast.Assert)):
+            findings.append(Finding("WARN", line, "needless-import",
+                "no import is needed — `sigma` is already bound"))
+        elif isinstance(node, ast.Try):
             findings.append(Finding("WARN", line, "unsupported-statement",
-                f"`{type(node).__name__.lower()}` is not shown by any block; "
-                "check the SDK docs before relying on it"))
+                "`try`/`except` runs, but no block shows it — check the SDK docs before relying on it"))
+        elif isinstance(node, (ast.With, ast.Assert)):
+            findings.append(Finding("ERROR", line, "no-with-assert",
+                f"`{type(node).__name__.lower()}` is not in the dialect"))
         elif isinstance(node, ast.JoinedStr):
-            findings.append(Finding("ERROR", line, "no-fstring",
-                "an f-string collapses `{{placeholder}}` to `{placeholder}` and it "
-                "stops binding — build the string with `+`"))
+            if "{{" in (ast.get_source_segment(source, node) or ""):
+                findings.append(Finding("ERROR", line, "no-fstring",
+                    "an f-string collapses `{{placeholder}}` to `{placeholder}` and it "
+                    "stops binding — build the string with `+`"))
 
-        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Mod, ast.Pow, ast.FloorDiv)):
-            symbol = {ast.Mod: "%", ast.Pow: "**", ast.FloorDiv: "//"}[type(node.op)]
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Pow, ast.LShift, ast.RShift)):
             findings.append(Finding("ERROR", line, "no-operator",
-                f"`{symbol}` is not in the dialect"))
+                f"`{'**' if isinstance(node.op, ast.Pow) else '<<' if isinstance(node.op, ast.LShift) else '>>'}` is not in the dialect"))
+
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.UAdd):
+            findings.append(Finding("ERROR", line, "no-operator", "unary `+` is not in the dialect"))
+
+        if isinstance(node, ast.Constant) and isinstance(node.value, bytes):
+            findings.append(Finding("ERROR", line, "no-bytes", "bytes literals are not in the dialect"))
+
+        if isinstance(node, ast.AnnAssign) and isinstance(node.annotation, ast.Name) \
+                and node.annotation.id in ("list", "dict", "tuple"):
+            findings.append(Finding("ERROR", line, "bare-annotation",
+                f"`{node.annotation.id}` needs an element type "
+                f"(`x: {node.annotation.id}[str] = ...`)"))
 
         if isinstance(node, ast.Subscript):
-            if isinstance(node.slice, ast.Slice):
-                findings.append(Finding("ERROR", line, "no-slice", "slices are not in the dialect"))
-            elif isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, str):
+            if (
+                isinstance(node.slice, ast.Constant)
+                and isinstance(node.slice.value, str)
+                and not (isinstance(node.value, ast.Name) and node.value.id in dict_names)
+            ):
                 findings.append(Finding("ERROR", line, "handle-not-dict",
                     f"handles are objects — call it "
                     f"(`{ast.unparse(node.value)}({node.slice.value!r})`), "
                     f"never `[{node.slice.value!r}]`"))
 
         if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
-            # A clause is a `for`. A filtering `if` is not one — SKILL.md's own
-            # data-model lookup is `[t for t in dm.list_tables() if t.name() == ...]`.
-            if len(node.generators) > 1:
-                findings.append(Finding("ERROR", line, "one-clause-comprehension",
-                    "single-clause comprehensions only — one `for`, no nesting"))
+            if isinstance(node, (ast.SetComp, ast.GeneratorExp)):
+                findings.append(Finding("ERROR", line, "list-comprehension-only",
+                    "only `[... for x in ...]` and `{k: v for x in ...}` parse — "
+                    "a generator or set comprehension does not"))
 
-        if isinstance(node, ast.Attribute) and node.attr == "format":
+        if isinstance(node, ast.Set):
+            findings.append(Finding("ERROR", line, "no-set", "set literals are not in the dialect"))
+
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "format"
+            and isinstance(node.func.value, ast.Constant)
+            and isinstance(node.func.value.value, str)
+            and "{{" in node.func.value.value
+        ):
             findings.append(Finding("ERROR", line, "no-format",
                 "`.format` collapses `{{placeholder}}` — build the string with `+`"))
 
@@ -187,7 +228,8 @@ def check_dialect(tree, source, findings):
             if node.id in token_names:
                 tokens_used.add(node.id)
             if (
-                node.id not in assigned
+                id(node) not in type_names
+                and node.id not in assigned
                 and node.id not in ALLOWED_BUILTINS
                 and node.id != "sigma"
                 and not is_sdk_class(node.id)
@@ -205,7 +247,8 @@ def check_dialect(tree, source, findings):
 
         if isinstance(node, ast.Call):
             check_call(node, line, findings)
-            check_nullable_argument(node, line, nullable, findings)
+            if id(node) not in guarded:
+                check_nullable_argument(node, line, nullable, findings)
 
     if token_names:
         missing = sorted(tokens_used - tokens_assigned)
@@ -214,9 +257,6 @@ def check_dialect(tree, source, findings):
                 "the opening token block is missing these: " + ", ".join(missing)
                 + " — every call for the workbook opens with all twelve "
                   "(scripts/theme.py prints them)"))
-
-    check_adjacent_strings(source, findings)
-
 
 def check_call(node, line, findings):
     func = node.func
@@ -270,11 +310,16 @@ def check_call(node, line, findings):
                     "color — use SERIES, SERIES_MID, SERIES_GREY or the ramp"))
 
 
+SDK_CAPS_CLASSES = {"KPI"}
+
+
 def is_sdk_class(name):
     """`Container`, `ListControl`, `SingleRowContainer` — the classes an
     `isinstance` narrow names are bound by the runtime, not by the program.
-    A token is ALL_CAPS, so it never matches here."""
-    return name[:1].isupper() and any(character.islower() for character in name)
+    A token is ALL_CAPS, so it never matches here — except `KPI`, the one
+    all-caps class."""
+    return name in SDK_CAPS_CLASSES or (
+        name[:1].isupper() and any(character.islower() for character in name))
 
 
 def literal_str(node):
@@ -306,10 +351,59 @@ def check_nullable_argument(node, line, nullable, findings):
         return
     for argument in node.args:
         if isinstance(argument, ast.Name) and argument.id in nullable:
-            findings.append(Finding("ERROR", line, "nullable-argument",
-                f"`{argument.id}` is assigned `None` somewhere, so it types as "
-                f"`None | ...` and `{node.func.attr}` rejects it — seed it from the "
-                "first real value instead"))
+            findings.append(Finding("WARN", line, "nullable-argument",
+                f"`{argument.id}` is assigned `None` somewhere, so it can type as "
+                f"`None | ...` (a loop reassigning it does) and `{node.func.attr}` "
+                "rejects that — seed it from the first real value instead"))
+
+
+def collect_type_names(tree):
+    """Names used as a type — in annotations and as `isinstance`'s second argument."""
+    exempt = set()
+
+    def mark(expr):
+        for inner in ast.walk(expr):
+            if isinstance(inner, ast.Name):
+                exempt.add(id(inner))
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for argument in node.args.posonlyargs + node.args.args + node.args.kwonlyargs:
+                if argument.annotation:
+                    mark(argument.annotation)
+            if node.returns:
+                mark(node.returns)
+        elif isinstance(node, ast.AnnAssign):
+            mark(node.annotation)
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "isinstance"
+            and len(node.args) == 2
+        ):
+            mark(node.args[1])
+    return exempt
+
+
+def collect_guarded_calls(tree):
+    """Calls inside `if x is not None:` (or `if x:`) — `x` is narrowed there."""
+    guarded = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        narrows = (
+            isinstance(test, ast.Compare)
+            and len(test.ops) == 1
+            and isinstance(test.ops[0], ast.IsNot)
+            and is_none(test.comparators[0])
+        ) or isinstance(test, ast.Name)
+        if narrows:
+            for statement in node.body:
+                for inner in ast.walk(statement):
+                    if isinstance(inner, ast.Call):
+                        guarded.add(id(inner))
+    return guarded
 
 
 def collect_assigned(tree):
@@ -319,24 +413,30 @@ def collect_assigned(tree):
             names.add(node.id)
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             names.add(node.name)
+        elif isinstance(node, ast.arg):
+            names.add(node.arg)
+        elif isinstance(node, ast.ExceptHandler) and node.name:
+            names.add(node.name)
     return names
 
 
-def check_adjacent_strings(source, findings):
-    """Two string literals side by side concatenate in Python but not here."""
-    try:
-        stream = tokenize.generate_tokens(io.StringIO(source).readline)
-        previous = None
-        for token in stream:
-            if token.type == tokenize.STRING:
-                if previous is not None and previous.end[0] == token.start[0]:
-                    findings.append(Finding("ERROR", token.start[0], "adjacent-strings",
-                        "adjacent string literals do not concatenate — join them with `+`"))
-                previous = token
-            elif token.type not in (tokenize.NL, tokenize.NEWLINE, tokenize.COMMENT, tokenize.INDENT, tokenize.DEDENT):
-                previous = None
-    except (tokenize.TokenError, IndentationError):
-        pass
+def collect_dicts(tree):
+    """Names assigned a dict literal or dict comprehension — `x['k']` is real there."""
+    names = set()
+    assigns = [n for n in ast.walk(tree) if isinstance(n, ast.Assign)]
+    changed = True
+    while changed:
+        changed = False
+        for node in assigns:
+            is_dict = isinstance(node.value, (ast.Dict, ast.DictComp)) \
+                or (isinstance(node.value, ast.Name) and node.value.id in names)
+            if not is_dict:
+                continue
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id not in names:
+                    names.add(target.id)
+                    changed = True
+    return names
 
 
 # ----------------------------------------------------------------- layout ---
@@ -396,6 +496,16 @@ def build_layout(tree, findings):
 
         elif isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Call):
             call = statement.value
+            if (
+                isinstance(call.func, ast.Attribute)
+                and call.func.attr == "set_column_density"
+                and isinstance(call.func.value, ast.Name)
+                and call.args
+                and isinstance(call.args[0], ast.Constant)
+            ):
+                element = model.elements.get(call.func.value.id)
+                if element:
+                    element.density = {"low": 6, "medium": 12, "high": 24}.get(call.args[0].value)
             if isinstance(call.func, ast.Attribute) and call.func.attr == "set_frame":
                 owner = call.func.value
                 if isinstance(owner, ast.Name):
@@ -439,11 +549,14 @@ def apply_frame(model, var, call, findings):
     element = model.elements.get(var)
     if element is None:
         return
-    if len(call.args) != 4:
+    named = {k.arg: k.value for k in call.keywords}
+    order = ["x", "y", "width", "height"]
+    arguments = list(call.args) + [named[n] for n in order[len(call.args):] if n in named]
+    if len(arguments) != 4:
         findings.append(Finding("ERROR", call.lineno, "frame-arity",
             "set_frame takes four integers (x, y, width, height)"))
         return
-    values = [model.fold(argument) for argument in call.args]
+    values = [model.fold(argument) for argument in arguments]
     element.frame_line = call.lineno
     if any(value is None for value in values):
         element.unfoldable = True
@@ -457,6 +570,8 @@ def columns_for(model, host):
         return 12
     if element and element.kind == "add_repeater":
         return 12
+    if element and element.kind == "add_container":
+        return element.density or 12    # an unset container is 12 columns
     return 24
 
 

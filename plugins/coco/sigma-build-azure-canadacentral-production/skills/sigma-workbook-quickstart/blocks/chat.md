@@ -43,8 +43,9 @@ chat.set_padding(False)                    # flush — the popover's own padding
   the set. Attach `base` for the whole grain and the page's main surface;
   never more than 3 sources.
 - Instructions are **static text**: `{{...}}` stays literal, so scope the
-  agent in words. There is no greeting, no starter questions, and no tools
-  on this surface — a brief that promises to file or update anything
+  agent in words. There is no greeting or starter-question setting, and
+  this block adds no agent actions (`chat.add_agent_action` can add them), so
+  the agent has no tools — a brief that promises to file or update anything
   yields an agent that apologizes; state the limit instead.
 - Always set both names — the default is a bare `Agent`, `Agent 2`, the way
   a page defaults to "Page 1".

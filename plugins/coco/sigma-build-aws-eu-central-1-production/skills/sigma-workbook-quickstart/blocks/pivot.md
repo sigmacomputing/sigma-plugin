@@ -8,7 +8,7 @@ it in sentence case and add no label text to the wrapper. Unlike a table, do **n
 
 ```python
 piv = sec.add_pivot_table(src)
-piv.set_frame(1, 1, 24, 14)                  # body (1, 1, 24, H), no label rows; a heatmap card is 14+ columns wide, H14 for five rows
+piv.set_frame(1, 1, 24, 14)                  # body (1, 1, 24, H), no label rows; a heatmap card is 14+ columns wide, H16 for five rows with the totals off (SKILL.md's pivot row)
 piv.set_name('<Plan by line item and month>')
 pm = piv.add_column('Pivot month', sigma.formula.date_trunc('month', piv.get_column_by_name('<DATE COL>')))
 pm.set_format_pattern('%b')
@@ -35,6 +35,10 @@ piv.set_padding(False)
   so the totals column does not crowd the cells.
 - Column-dimension cardinality decides width: ~12 monthly columns fit;
   past that, truncate coarser or filter the range.
+- "Limit it to five rows" (any number): `sigma.filter.top_n` ranks the column it is applied
+  to, so on a row dimension it silently keeps the alphabetically last N.
+  Query the N highest by value and filter the row column to them with
+  `sigma.filter.values([...])`.
 
 ## Rollup grid — no column dimension
 
@@ -47,7 +51,7 @@ piv.add_pivot_row(piv.get_column_by_name('<LINE ITEM>'))   # narrow
 piv.set_totals_default_display(show_subtotals=True, show_grand_totals=True)
 piv.set_frozen_column(piv.get_column_by_name('<SECTION>'))
 piv.rename_total_label(piv.get_column_by_name('<SECTION>'), 'FY total')
-piv.collapse_rows(piv.get_column_by_name('<LINE ITEM>'))   # opens rolled up
+piv.collapse_rows(piv.get_column_by_name('<SECTION>'))   # the outer column rolls up to its subtotals; collapsing the inner one left every row open
 ```
 
 - **Semantics come from formula conditional formats**, not a color scale —

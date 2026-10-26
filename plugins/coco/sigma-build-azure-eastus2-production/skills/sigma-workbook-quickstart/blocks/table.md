@@ -79,9 +79,10 @@ tbl.add_conditional_format(delta, sigma.conditionalFormat.less_than(0, backgroun
   side card, T = 10 → H 14 (6 goals, the rest scroll) and no button.
 - Number formats per column:
   `col.set_format('currency_si', decimals=1, currency='$')` /
-  `('percent', decimals=1)` / a date's `set_format_pattern('%b %d')`.
-- "And then what?" — a table of records on a work surface carries a
-  picker that opens the record (`blocks/detail.md`), or is deliberately
+  `('percent', decimals=1)` / a date's `set_format_pattern('%b %d')` — a date column
+  left unformatted renders as a raw timestamp.
+- "And then what?" — a table of records on a work surface opens
+  the record on a row click or a picker (`blocks/detail.md`), or is deliberately
   reference-only; a table nobody can open is the commonest thing missing
   from a finished page. A table of records a reader looks things up in also takes
   a `contains` search over its name column in the toolbar above

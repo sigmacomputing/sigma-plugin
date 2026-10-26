@@ -34,7 +34,7 @@ f_status = form.get_field_by_name('Status')
 if isinstance(f_status, SelectFormField):      # a select column arrives as radio buttons
     f_status.set_presentation('dropdown')
     f_status.set_default('Pending')
-saved = form.on_submit('saved', [sigma.action.refreshElementEffect.refresh_element(it)])   # the built-in insert stays
+saved = form.on_submit('saved', [])   # the built-in insert stays and updates the table — a refresh_element here hangs the submit
 saved.set_success_toast(title='Request saved')
 ```
 

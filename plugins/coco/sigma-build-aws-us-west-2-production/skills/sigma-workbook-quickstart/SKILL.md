@@ -16,6 +16,8 @@ description: >-
   build_workbook tool. Not for a single factual question answerable in one
   number or one chart — answer that inline with built-in visualization
   tools instead.
+metadata:
+  sdk-version: "1.1.0"
 ---
 
 **Environment:** `sigma` → `https://aws-api.sigmacomputing.com/mcp/v2`
@@ -286,6 +288,12 @@ y = 7    # body y: the shell table
 - Several bases: one `add_table` each into its own variable, stacked 12
   rows apart on the data page. A pre-filtered or pre-aggregated view several
   elements share is a second table off `base.to_source()`, named for what it is.
+  A grouped table's `to_source()` reads its detail rows — until every detail
+  column is hidden, then it reads the groups — so an aggregate over it can
+  repeat each group's value once per row; for one row per group always use the
+  grouping's, `g = t.set_groupings([...])[0]`, then `g.to_source()`. A linked
+  input table is the exception: it takes the grouped table's own `to_source()`
+  (already one row per group) and rejects the grouping's.
 - Inter is a standard family — if the font call still raises,
   `print(theme.list_fonts())` and resubmit with the closest name (Geist,
   then System UI); never drop the calls.
@@ -300,9 +308,9 @@ End it with the state the next two steps need, one line each and nothing
 else: `page.id()|page.name()` per page, then
 `host|el.id()|el.name()|el.frame()` per element — `host` is the page,
 container, or panel variable it was added to, because step 5 re-fetches from
-that host and from nowhere else. Explicit `print` calls, one per element: a
-`for` over a list of handles of different classes fails the typecheck, which
-unifies a list to one element type. Each popover, drawer, and modal's children
+that host and from nowhere else. One `for` per host over its own children
+prints their shared methods (`id()`, `name()`, `frame()`) — never a list of
+`(host, element)` pairs: a list of mixed tuple types fails to unpack. Each popover, drawer, and modal's children
 list under it. An overlay printing none never got filled — it opens blank;
 add its content. A program that skips this dump leaves steps 5 and 6 with no
 ids to work from.
@@ -321,18 +329,26 @@ has no frame to catch. It reads the state dump above too —
 **Program rules** — what the checker enforces, and what breaks real builds
 without it (a failed call: `## Failure handling`):
 
-- Not full Python: no `def`/`class`/`lambda`/`while`, no slices, no `%`, `**`,
-  or `//`, no adjacent string literals (use `+`), single-clause
-  comprehensions only. Builtins are just `print len any enumerate zip range
-  list reversed sorted min max str isinstance datetime RuntimeError` — aggregation is
-  `sigma.formula.sum`, never `sum()`. No f-strings or `.format` — either
-  collapses a `{{placeholder}}` to `{placeholder}` and it stops binding;
-  spans are built with `+` exactly as the blocks show.
+- Not full Python: no `class`/`lambda`/`while`/`with`/`assert`, no `**`,
+  no sets, slices on lists and tuples only (never a string), and list
+  comprehensions only, no generator expressions. An annotation needs an
+  element type: `x: list[str] = []`, never bare `list`. A
+  `def` needs annotated parameters and return — inline the calls instead.
+  Builtins are just `print len int any enumerate zip range
+  list reversed sorted min max str isinstance type datetime`, and the exceptions
+  `Exception RuntimeError ValueError TypeError KeyError IndexError
+  ZeroDivisionError` (`try`/`except` catches them) —
+  aggregation is `sigma.formula.sum`, never `sum()`. Never build text that
+  holds a `{{placeholder}}` with an f-string or `.format` — either collapses
+  it to `{placeholder}` and it stops binding; spans are built with `+`
+  exactly as the blocks show.
 - Handles are objects: `col.name()`, never `col["name"]`. A chart's columns
-  come from **that chart's own** `get_column_by_name`. `add_column` takes a
+  come from **that chart's own** `get_column_by_name`; a source column the
+  element does not read yet comes in with `add_source_column('<NAME>')`.
+  `add_column` takes a
   `Formula`, not a column — `add_column('Block', col)` fails the typecheck;
-  wrap it (`sigma.formula.text(col)`, `number`, `date` — not the `as_*` casts,
-  which reject a bare column too), and the same wrap is what lets one formula
+  wrap it (`sigma.formula.text(col)`, `number`, `date`; the `as_*` casts take
+  a bare column too), and the same wrap is what lets one formula
   nest inside another (`blocks/formulas.md`). A calc's name must
   not collide with a source column — a collision doesn't error, it silently
   becomes `Revenue (1)` while name lookups keep returning the original
@@ -364,6 +380,16 @@ build returns, every page's call in one round; a deadline-exceeded error is
 transient — retry once. Then an element shot for each table, pivot, or input
 grid whose rows matter.
 
+Shoot each **drawer or modal** once, as a page shot of its own id (the
+`<overlay>`): it ignores `pixelWidth` and anything inside it shoots blank. If
+it is rejected as too large, do not retry — look once through a preview: on one
+temporary visible page, re-add the tables and charts of every overlay that
+failed (same source, columns and frames; a drawer's grid is 12 columns), take
+**one** page shot of it, then `delete()` the page. That is the last shot for
+overlays. A wizard's later steps, and every card, control and action in an
+overlay, go unseen: report them as not looked at. A container's element shot
+errors `Not a visualization`.
+
 Walk each page top to bottom and **list every element with a verdict** —
 `el.name()`: what you see. A walk that reports prose, or "looks fine", is the
 walk that ships the defects below:
@@ -392,8 +418,8 @@ Nothing found → skip the fix call and report (a plan, forecast, or queue app s
 makes it, carrying the linked table's seed rows). Otherwise fix everything
 found, across every page, in one further call — it re-fetches what it
 touches, **from the host the step 4 dump named beside it**: `get_element`
-sees a host's own children and no deeper, so a card's child comes off that
-container, a strip's button off `page.header()`, and an overlay off
+finds any descendant of the host it is called on, so a card's child comes off
+its container or an ancestor, a strip's button off `page.header()`, and an overlay off
 `sigma.workbook.get_page(<OVERLAY ID>)` — an overlay is not an element. A
 miss raises rather than returning `None`, so a fallback written after one
 never runs. `list_pages` and `get_page` both hand back `PageBase`, which has
@@ -417,9 +443,7 @@ left unfixed.
 Workbook id + URL, pages with their bands, the choices you made (chart
 kinds, groupings, controls and defaults) so the user can redirect, for an
 app the writeback connection, who its input tables accept edits from, and
-the seed rows added, for a record detail the one UI step that turns its
-picker into a row click (open that `select_row` effect, set its value to
-Column), the one assumption
+the seed rows added, the one assumption
 from step 2, and anything step 5 left open. Nothing else —
 no next-steps filler.
 
@@ -455,7 +479,7 @@ Minimums are floors — below them an element clips its label or value (the rend
 | Map | 6×8 | `blocks/chart-map.md` owns the frames |
 | KPI | 2×3 | 5–8 wide × 5 · 10 (sparkline) |
 | Table | 4×3 | 24 wide. A long list scrolls and takes its band height (the Ledger's 18). A table whose rows must all be **seen** — a summary — sizes to them: with `set_summary_bar(False)` a data row is 32px against the 24px pitch, so `(4 × rows + 5) / 3` rounded up — 5 rows fit at 9, 13 at 19, and one row short clips the last. A collapsed group row measures the same as a data row. Over ~10 visible columns the first column truncates: cut columns, don't widen |
-| Pivot | 4×3 | A pivot row is 2 grid rows, and there is no `set_summary_bar`: it keeps its title, its two header rows, and its grand-total row, so `2 × rows + 7` — five rows fit at 17. Drop 2 with no column dimension, and 2 more under `show_grand_totals=False` |
+| Pivot | 4×3 | A pivot row is 2 grid rows, and there is no `set_summary_bar`: it keeps its title, its two header rows, and its grand-total row, so `2 × rows + 8` — five rows fit at 18. Drop 1 with no column dimension, and 2 more under `show_grand_totals=False` |
 | Text | 1×1 | 1 row per ~24px of type: `p-*` 1 row, `###` 1–2, `##` 2, `#` 3 |
 | Button | 2×1 | 4–6 × 2. Centered in its frame, not filled — so a right-hand frame alone still floats short of the edge: `set_align('right')` makes it flush, `'stretch'` fills the frame (a card row or paired footer, never a shell) |
 | Control | 2×2 | 5–7 × 2 — narrower or 1 row high and the label and value clip |
@@ -605,14 +629,14 @@ Text content is markdown. These are the only sizes that exist; spans set
 Fourteen is the floor for text elements; a smaller label is an element's own
 title via `set_font_size`. KPI values are 24 bold, 30 on a loud band.
 
-Dynamic values: `add_text(md, formulas={'Total revenue':
-sigma.formula.sum(col)})` binds `{{Total revenue}}`; use the base table's
-columns. A placeholder takes **no format spec** — `{{Rev | $,.0f}}` is not
-parsed, it renders that literal string on the page — and a bare aggregate
-renders raw (`287243281.43`, `1.0366818247400837`). So **pre-format every
-value bound into prose** (`blocks/formulas.md`, "Pre-format for prose"),
-and only into prose: elements format their own columns with `set_format`
-instead.
+Dynamic values: `add_text(md, formulas={'Total revenue': (sigma.formula.sum(col), fmt)})`
+binds `{{Total revenue}}`, with `fmt = sigma.format.format('currency_si', 1, '$')`;
+use the base table's columns. A placeholder takes **no format spec** —
+`{{Rev | $,.0f}}` is not parsed, it renders that literal string — and a bare
+aggregate renders raw, full-precision digits, so bind a `(formula, fmt)` pair
+for every number or date in prose. A value-list field takes no pair:
+pre-format it as text (`blocks/formulas.md`, "Pre-formatted text"). Elements
+format their own columns with `set_format` instead.
 
 **Color values, never words** — a number may take `PRIMARY`, good,
 or bad; a sentence stays `INK`, `BODY`, or `MUTED`. Pages open with language,
@@ -682,10 +706,10 @@ freely; the styling calls stay as written, token names included.
 | Buttons + action wiring | `blocks/buttons.md` |
 | Tab switcher on a card, or a tabbed main surface | `blocks/tabs.md` |
 | Stepped wizard in a modal · one-step form modal | `blocks/wizard.md` |
-| Record detail — a picker into a modal, drawer, or popover · record card beside a list | `blocks/detail.md` |
+| Record detail — a row click or picker into a modal, drawer, or popover · record card beside a list | `blocks/detail.md` |
 | Assistant chat — a popover from the shell's top-right trigger | `blocks/chat.md` |
 | Repeated cards — one design per row or group (rep, region, product, queue item) · list rows · card feed with a per-card action | `blocks/cards.md` |
-| A calculation no block shows — average, conditional, share of total, prior period, rank, date window, pre-formatting for prose | `blocks/formulas.md` |
+| A calculation no block shows — average, conditional, share of total, prior period, rank, date window, text built from a number (value-list fields, joined columns) | `blocks/formulas.md` |
 | Input table — empty or linked, columns, seed rows; read with any app block | `blocks/input-table.md` |
 | Plan grid app — with `input-table` `sidebar` `title` `formulas`; then `hero` `kpi-row` `cards` `context-strip` `compare-strip` `buttons` `chat` as its bands call for them | `blocks/plan-grid.md` |
 | Forecast grid app — date spine × entities; the plan-grid reads plus `plan-grid` `chart-trend` | `blocks/forecast.md` |
@@ -709,8 +733,10 @@ errors, `list_resources` once and take the name from what it lists.
 | `sdk://skills/<name>/SKILL.md` | a feature no block covers, and only these five — `forms`, `survey`, `relationship-columns`, `balance-sheet`, `maps` (region-type edge cases only — `blocks/chart-map.md` has the rest) |
 
 Take only mechanics from those skills — their theme, styling, and layout
-advice loses to the design system above. Their `/sdk/...` and `/skills/...`
-cross-references need the `sdk://` prefix; no path, URI, or tool name ever
+advice loses to the design system above. If an example in one fails
+because imports or `sigma.data.sql` are unavailable, do not retry it — take
+the mechanics from the module docs instead. Their
+`/sdk/...` and `/skills/...` cross-references need the `sdk://` prefix; no path, URI, or tool name ever
 goes inside a program.
 
 ## Failure handling
@@ -725,6 +751,12 @@ goes inside a program.
   last one. A later call of a linked-table app keeps every page — its base
   must survive: resubmit that call alone, fixed, after `delete()`-ing what
   its failed run had built before the error.
+- **Replacing an element others read from** — `delete()` raises nothing and
+  strands every consumer with no source; only a repeater or single row
+  container can be re-pointed (`set_source`). `el.describe_lineage()` lists
+  what sits downstream, so edit in place when anything does. A stranded one
+  shows in `sigma.workbook.describe_lineage()` with nothing above it:
+  rebuild it on the new element and `delete()` it.
 - **A rejected approach** — a runtime refusal naming the operation, not a
   type or syntax problem — one retry, then change approach or tell the
   user; never resubmit just to see.
