@@ -1,6 +1,6 @@
 {
   "name": "sigma-build-aws-ca-central-1-production",
-  "version": "0.11.14",
+  "version": "1.0.0",
   "description": "AWS Canada (Central): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"
