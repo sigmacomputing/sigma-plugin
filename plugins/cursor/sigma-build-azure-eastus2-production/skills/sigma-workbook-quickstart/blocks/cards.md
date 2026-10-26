@@ -5,15 +5,15 @@ card per entity** (per rep, per region, per product). The default way to show
 a modest set of records: under ~200 rows a card list reads better than a
 table, and any band that would otherwise be the same card design built three
 or more times is one. Cards hold text, buttons, dividers, and plain
-containers — no table, chart, KPI, control, tabbed container, nested
-repeater, or **value list** (the SDK binds a card's value list to the whole
-source, not to the card, whatever `layoutHost.py` says). The card's own grid
-is a **fixed 12 columns**; every value on it is a text bound to a column of
-the repeater's source.
+containers — no table, chart, KPI, control, tabbed container, or nested
+repeater. The card's own grid is a **fixed 12 columns**; every value on it is
+a text bound to a column of the repeater's source. A value list reads the
+card's own row too, but binds a bare number unformatted, so texts stay the
+default.
 
 One card per entity starts with a **one-row-per-entity table on the data
 page**: grouped, with its facts as grouping calculations, text-typed and
-pre-formatted (`blocks/formulas.md`, "Pre-format for prose"):
+pre-formatted (`blocks/formulas.md`, "Pre-formatted text"):
 
 ```python
 lst = data_page.add_table(src)
@@ -24,6 +24,8 @@ lg.set_calculation('Value text', sigma.formula.ampersand(sigma.formula.const_tex
 lg.set_calculation('Meta', sigma.formula.ampersand(sigma.formula.text(sigma.formula.count_distinct(lst.get_column_by_name('<KEY>'))), sigma.formula.const_text(' ORDERS')))
 lg.set_calculation('Kind', sigma.formula.max(lst.get_column_by_name('<CATEGORY>')))
 key = lg.keys()[0]
+if not isinstance(key, FormulaColumn):   # keys() may hold a column folder, which no formula takes
+    raise RuntimeError('key')
 ```
 
 Then the repeater, on the page or inside a section card:
@@ -62,9 +64,10 @@ cv.set_frame(1, 5, 12, 1)                  # the last row of the 5-row card
   Never `set_element_gap(False)` on a repeater.
 - A repeater over a filtered queue opens empty sooner or later — give it
   `cards.set_no_data_label('NO PENDING ITEMS')` rather than a blank band.
-- Filter through the **source table** (a control targeting `lst`). Sorting
-  has **no SDK call yet** and the table's own sort does not reach the cards
-  — they come in query order. Cards take no conditional formats or
+- Filter through the **source table** (a control targeting `lst`). Sort the
+  cards with `cards.set_sort([sigma.sort.ascending(col)])` (a column of the
+  repeater's source, or the grouping's key or calculation); the table's own
+  sort does not reach them. Cards take no conditional formats or
   theme-token card colors (hex only).
 - **Two styling surfaces, and mixing them is the classic bug**: the inherited
   `Element` methods style the **box the cards sit in**, `set_card_*` styles
@@ -194,8 +197,9 @@ go.on_click('open', [sigma.action.navigateEffect.navigate_to(<PAGE>)])
 
 - A **third content line grows the card**: the list rule's 20 rows for three
   cards becomes 22. The trailing row cannot be reclaimed.
-- A card's button reaches a **page or an overlay, never a row** — an
-  effect's value binds to the whole source, so a card cannot hand its own
-  record to a picker or a detail panel (`blocks/detail.md`).
+- A card's button hands its **own record** to a detail card:
+  `go.on_click('show', [sigma.action.setSingleRowViewEffect.select_row(card, lst.get_column_by_name('<KEY>'))])`,
+  the source's column bound as the card's text binds it (`blocks/detail.md`).
+  It also reaches a page or an overlay (`navigate_to`, `open_overlay`).
 - The same repeater runs **inside a drawer or modal**, on a container in
   it — `set_card_border(None)` on a `FILL` card.

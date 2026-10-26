@@ -1,6 +1,6 @@
 {
   "name": "sigma-build-azure-australiaeast-production",
-  "version": "0.11.12",
+  "version": "0.11.14",
   "description": "Azure Australia (New South Wales): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"

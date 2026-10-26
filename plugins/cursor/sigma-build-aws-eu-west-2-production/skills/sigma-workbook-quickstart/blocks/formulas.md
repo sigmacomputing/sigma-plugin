@@ -6,12 +6,13 @@ signatures as the SDK defines them. Wrap literals in formula args:
 comparisons are `gt / gte / lt / lte / between / eq / neq`.
 
 **Nesting one formula inside another needs a wrap.** `lookup` `greatest`
-`least` `lag` `coalesce` `if_` `grand_total` `max` `min` all return an
+`least` `lag` `lead` `coalesce` `if_` `grand_total` `max` `min` all return an
 untyped `Formula`, and every typed argument — `divide` `subtract` `multiply`
-`abs` `cumulative_sum` `zn` — rejects it: `expects NumberFormula | Column but
-got Formula`. Put `sigma.formula.number(...)` (or `text` / `date`) around the
-inner call: `zn(number(lookup(...)))`. `sum` and `avg` are already typed and
-need no wrap.
+`abs` `cumulative_sum` `zn` `ampersand` — rejects it: `expects
+NumberFormulaResolvable but got Formula` (`TextFormulaResolvable` for
+`ampersand`). Put `sigma.formula.number(<inner call>)` (or `text` / `date`)
+around the inner call: `zn(number(<inner call>))`. `sum` and `avg` are already
+typed and need no wrap.
 
 ```python
 # Averages and distincts — same shape as sum / sum_if everywhere
@@ -43,7 +44,7 @@ quota = sigma.formula.lookup(targets.get_column_by_name('Quota'),
 
 # Nulls: zn -> 0 on a column or a typed number formula; coalesce wraps any formula
 clean = sigma.formula.zn(base.get_column_by_name('<MEASURE>'))
-safe = sigma.formula.coalesce(sigma.formula.lookup(...), sigma.formula.const_num(0))
+safe = sigma.formula.coalesce(quota, sigma.formula.const_num(0))
 
 # Date windows — a rolling flag to filter or sum_if by
 recent = sigma.formula.gte(base.get_column_by_name('<DATE COL>'),
@@ -51,11 +52,11 @@ recent = sigma.formula.gte(base.get_column_by_name('<DATE COL>'),
 age_days = sigma.formula.date_diff('day', base.get_column_by_name('<DATE COL>'), sigma.formula.today())
 ```
 
-**Pre-format for prose** — a `{{placeholder}}` takes no format spec, and
-`text()` on **any** number renders full float precision, aggregate or plain
-column (`287243281.43`, `85.0000000000000000000`). So every value bound into
-a sentence, or joined with `ampersand` into a column, is rounded in the
-formula — `text(round(x, n))`, never `text(x)`:
+**Pre-formatted text** — prose binds `(formula, fmt)` (`SKILL.md`); a value-list
+field, or a number joined into a text column, takes no format, and `text()` on
+**any** number renders full float precision, aggregate or plain column
+(`287243281.43`, `85.0000000000000000000`). Round in the formula there —
+`text(round(x, n))`, never `text(x)`:
 
 ```python
 # money
@@ -85,6 +86,9 @@ rk.set_filter(sigma.filter.values([1]))
   calc, a `formulas={}` placeholder, or a condition inside `sum_if`.
 - `rank(column, 'desc')` numbers rows for a table column; a top-N **chart**
   stays `sigma.filter.top_n` (`blocks/chart-ranked.md`).
+- Counting rows per category in a donut or bar: `count` a column other than
+  the category itself — `count(<category>)` returns 1 per category. Use the key
+  or id column.
 - `date_add` / `date_diff` units: `'year' 'quarter' 'month' 'week' 'day'
   'hour' 'minute' 'second'`. `lag`/`lead` offsets are plain ints;
   `date_add` amounts are formulas (`const_int`).

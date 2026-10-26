@@ -4,7 +4,8 @@ Controls target **base** columns so one filter re-scopes everything built
 from the base. Pick the control from the column's shape: few distinct
 values → segmented · many → list · date → `add_date_range_control` ·
 number → `add_number_range_control` · a single threshold → `add_slider_control(bar, value=50000, target=..., range=(0, 250000, 5000), compare_op='>=')`
-(`compare_op` is `'='`, `'<='`, or `'>='`) · boolean → `add_switch_control` —
+(`compare_op` is `'='`, `'<='`, or `'>='`) · boolean → `add_switch_control` ·
+the N highest rows of a number → `add_top_n_control(bar, value=5, target=..., ranking='row_number')` —
 all take `(host, value=, target=)` like the three below; a number-range
 `value=` is a `(min, max)` tuple. A **type-to-find search box** over a name
 column is `add_text_control` with a `match_mode` — required on any surface a
@@ -93,8 +94,7 @@ main.set_padding(False)                 # structural — cards go inside it
   control spends **row 1 on the label and row 2 on the input** — so
   anything that must read level with it lines up with row 2, not with the
   frame: a button is framed `(x, 2, w, 1)`, a text `(x, 1, w, 2)` with
-  `set_vertical_align('bottom')`. Buttons have no vertical align of their
-  own.
+  `set_vertical_align('bottom')`.
 - Set `value=` defaults only when the first render still shows data; a
   filtered-to-empty opening page is a build failure.
 - A date-range default is absolute datetimes —
@@ -106,3 +106,6 @@ main.set_padding(False)                 # structural — cards go inside it
   (`[orders.get_column_by_name('Region'), targets.get_column_by_name('Region')]`).
 - The segmented control's `options` order is display order — pass a
   chronological/logical list, not whatever `query` returned.
+- `add_top_n_control` keeps the N highest rows of its numeric target
+  (`bottom=True` the lowest). The default `ranking='rank'` keeps every tie, so
+  pass `ranking='row_number'` for exactly N.

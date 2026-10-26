@@ -18,23 +18,22 @@ h3.set_frame(19, 1, 6, 1)
 r1 = cs.add_text('<p class="p-small"><span style="color: ' + MUTED + '">**Revenue**</span></p>')
 r1.set_frame(1, 2, 6, 1)
 r1.set_vertical_align('middle')
-usd = sigma.formula.const_text('$')
-mm = sigma.formula.const_num(1000000)
+money = sigma.format.format('currency_si', 1, '$')
 tgt = sigma.formula.sum(base.get_column_by_name('Target'))
 rev = sigma.formula.sum(base.get_column_by_name('Revenue'))
-r1b = cs.add_text(                         # every value pre-formatted (blocks/formulas.md) — bound bare, sum() renders 287243281.43
+r1b = cs.add_text(                         # (formula, format) — bound bare, sum() renders 287243281.43
     '<p class="p-small" style="text-align: center"><span style="color: ' + INK + '">{{Baseline}}</span></p>',
-    formulas={'Baseline': sigma.formula.ampersand(usd, sigma.formula.ampersand(sigma.formula.text(sigma.formula.round(sigma.formula.divide(tgt, mm), 1)), sigma.formula.const_text('M')))})
+    formulas={'Baseline': (tgt, money)})
 r1b.set_frame(7, 2, 6, 1)
 r1b.set_vertical_align('middle')
 r1c = cs.add_text(
     '<p class="p-small" style="text-align: center"><span style="color: ' + INK + '">**{{Current}}**</span></p>',
-    formulas={'Current': sigma.formula.ampersand(usd, sigma.formula.ampersand(sigma.formula.text(sigma.formula.round(sigma.formula.divide(rev, mm), 1)), sigma.formula.const_text('M')))})
+    formulas={'Current': (rev, money)})
 r1c.set_frame(13, 2, 6, 1)
 r1c.set_vertical_align('middle')
 r1d = cs.add_text(
     '<p class="p-small" style="text-align: center"><span style="color: ' + PRIMARY + '">**{{Change}}**</span></p>',
-    formulas={'Change': sigma.formula.ampersand(usd, sigma.formula.ampersand(sigma.formula.text(sigma.formula.round(sigma.formula.divide(sigma.formula.subtract(rev, tgt), mm), 1)), sigma.formula.const_text('M')))})
+    formulas={'Change': (sigma.formula.subtract(rev, tgt), money)})
 r1d.set_frame(19, 2, 6, 1)
 r1d.set_vertical_align('middle')
 ```

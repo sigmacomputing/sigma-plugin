@@ -13,7 +13,7 @@ column not yet added fails.
 ```python
 it = sec.add_input_table('<CONNECTION_ID>')    # the base source's connection (describe prints it)
 it.set_name('Requests')
-it.set_edit_mode('published-all-users')        # viewers can write; the default 'draft' is workbook editors only, 'published-explore' explorers and editors
+it.set_edit_mode('published-all-users')        # viewers can write once the workbook is published; the default 'draft' is workbook editors only, 'published-explore' explorers and editors
 it.set_frame(1, 3, 24, 14)                     # 2 x rows + 2: a pill row is two grid rows, and so is the header
 i_name = it.add_editable_column('Request', 'text')
 i_amt = it.add_editable_column('Amount', 'number')
@@ -33,7 +33,7 @@ its.header_style().set_color(MUTED)
 for slot in [its.header_style(), its.cell_style()]:
     slot.set_background_color('#ffffff')
 it.title_style().set_visible(False)
-it.set_summary_bar(False)                      # the row/column count strip under the grid
+it.set_summary_bar(False)                      # the totals row under the grid
 it.set_background_color(None)
 it.set_padding(False)
 it.set_no_data_label('NO REQUESTS YET — ADD THE FIRST ONE ON THE LEFT')
@@ -91,7 +91,7 @@ l_base = lt.get_column_by_name('Baseline')
 l_plan = lt.add_formula_column('Plan', sigma.formula.coalesce(l_ovr, sigma.formula.multiply(l_base,
     sigma.formula.add(sigma.formula.const_num(1), sigma.formula.divide(sigma.formula.number(sigma.formula.coalesce(l_adj, sigma.formula.const_num(0))), sigma.formula.const_num(100))))))
 l_delta = lt.add_formula_column('Delta', sigma.formula.subtract(l_plan, l_base))
-pk = lt.list_primary_key_columns()[0]          # the key every action targets — a linked table has no row_id
+pk = lt.list_primary_key_columns()[0]          # the key every action targets — a linked table is keyed on it, so it needs no row_id
 lt.set_frozen_column(lt.get_column_by_name('Product'))
 lt.set_summary_bar(False)
 lts = lt.table_style()                         # then the style calls of the empty table
@@ -106,12 +106,15 @@ lt.update_rows([                               # step 5 call: seed 3 keys so Pla
 ])
 ```
 
-- If either `add_input_table` or `add_linked_input_table` raises that the
-  connection cannot host input tables, or names several writeback schemas:
-  both take `writeback_schema_id='<ID>'`, so ask the user which and resubmit
-  — never conclude the app cannot be built. A **linked** table over a
-  `sigma.data.source.join` can lose its connection even when both sides share
-  one; re-base it on a single-table source first.
+- If either `add_input_table` or `add_linked_input_table` names several
+  writeback schemas, both take `writeback_schema_id='<ID>'`: ask the user which
+  and resubmit. If it raises `no writeback connection`, a schema cannot fix it —
+  ask which connection to use and resubmit with that id (a linked table writes
+  through its source's connection); when none can write, say the app has no
+  write surface here — never build around it. A **linked** table cannot be
+  built on a `sigma.data.source.join` directly: add the join as a table first
+  (`blocks/forecast.md`), then link that table.
+- Format a date column as in `blocks/table.md`.
 - Handles from `add_*_column` are what seed dicts and action effects take. A
   column fetched later with `get_column_by_name` is a plain `Column` — narrow
   it first: `if isinstance(c, LiteralEditableColumn)` / `SingleSelectEditableColumn`.

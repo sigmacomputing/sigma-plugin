@@ -15,7 +15,7 @@ state = ctx.add_text(
     formulas={
         'Scenario': sigma.formula.max(base.get_column_by_name('<SCENARIO>')),
         'Edits': sigma.formula.count_if(sigma.formula.is_not_null(base.get_column_by_name('<OVERRIDE>'))),
-        'Impact': sigma.formula.ampersand(sigma.formula.const_text('$'), sigma.formula.ampersand(sigma.formula.text(sigma.formula.round(sigma.formula.divide(net, sigma.formula.const_num(1000000)), 1)), sigma.formula.const_text('M'))),   # pre-formatted (blocks/formulas.md); a count binds bare
+        'Impact': (net, sigma.format.format('currency_si', 1, '$')),   # a count binds bare
     })
 state.set_frame(1, 1, 12, 2)
 state.set_vertical_align('bottom')     # level with the control's input; the label takes row 1 (blocks/filters.md)
@@ -24,7 +24,8 @@ sel.set_name('Active scenario')
 sel.set_frame(13, 1, 6, 2)
 # a list control can be cleared, and cleared it un-scopes the page. When the selection
 # feeds a lookup or a model, use blocks/filters.md's segmented control instead (≤4
-# values) — it has no clear affordance, so the page can never resolve against no scenario
+# values) with `show_clear=False` — a segmented control shows a clear segment by
+# default, so without it the page can still resolve against no scenario
 btn = ctx.add_button('Switch scenario →')
 btn.set_frame(19, 2, 6, 1)
 btn.set_appearance('text')

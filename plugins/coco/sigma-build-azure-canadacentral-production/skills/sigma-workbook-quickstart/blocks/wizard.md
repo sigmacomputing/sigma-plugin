@@ -137,7 +137,7 @@ form.set_reset_visible(False)
 form.set_submit_button_alignment('stretch')
 form.set_spacing('medium')
 form.set_background_color(None)
-saved = form.on_submit('saved', [sigma.action.refreshElementEffect.refresh_element(it), sigma.action.overlayEffects.close_overlay()])
+saved = form.on_submit('saved', [sigma.action.overlayEffects.close_overlay()])   # no refresh_element: the form's own insert updates the table, and a refresh here hangs the submit
 saved.set_success_toast(title='Goal created')
 cancel = m.add_button('Cancel')            # quiet secondary under the stretched submit
 cancel.set_frame(1, 17, 12, 2)
@@ -151,10 +151,9 @@ opener.on_click('new', [sigma.action.overlayEffects.open_overlay(m)])   # opener
 ```
 
 Field defaults and dropdown presentation as `blocks/intake.md` shows.
-- A formula **cannot reference a control's live value** — a review step
-  cannot echo the chosen inputs. Keep step 3 to a static summary and the
-  actions; live *data* state comes from the context-strip's
-  filtered-aggregate trick, not from controls.
+- A text placeholder or value-list field can bind a control directly
+  (`formulas={'n': nm}`), so step 3 shows the chosen inputs and follows
+  them as they change; keep it to a few lines and the actions.
 - Replace the `done.on_click('close', …)` line to commit the controls as a
   row — controls are action values:
   `done.on_click('save', [sigma.action.inputTableEffects.insert_row(it, {i_name: nm, i_case: case}), sigma.action.refreshElementEffect.refresh_element(it), sigma.action.overlayEffects.close_overlay()])`

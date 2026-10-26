@@ -65,6 +65,9 @@ ft.update_rows([                               # fam, mon from get_column_by_nam
 
 - A quarter grid uses `date_trunc('quarter', …)` and quarter-start seeds.
 - Everything else is `blocks/plan-grid.md` over `ft.to_source()` — KPI row,
-  compare strip, submit and review wiring — except Overview's pending band,
+  compare strip, submit and review wiring — with its columns mapped: `Plan` →
+  `Forecast`, `Baseline` → `Last year`, `Delta` → `vs last year`, `Rationale` →
+  `Note`; the edited-row count, context, compare and toast formulas read those
+  names, not plan-grid's. Except Overview's pending band,
   which is `blocks/chart-trend.md`'s two-series variant (Last year behind
   Forecast, by Month) at `(1, 15, 24, 14)`.
