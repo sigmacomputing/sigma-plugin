@@ -68,8 +68,8 @@ jobs:
               if not re.fullmatch(r"\d+\.\d+\.\d+", version):
                   raise SystemExit(f"Version {version!r} isn't X.Y.Z")
               print(f"{len(manifests)} plugins at {version}")
-              out.write(f"tag=v{version}-beta\n")
-              out.write(f"slug=v{version.replace('.', '-')}-beta\n")
+              out.write(f"tag=v{version}\n")
+              out.write(f"slug=v{version.replace('.', '-')}\n")
           PY
 
       # An existing release is fine only if it was cut from main and the
@@ -130,4 +130,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
-        run: gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "$TAG" --prerelease --generate-notes
+        run: gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "$TAG" --generate-notes
