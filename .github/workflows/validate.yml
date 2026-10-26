@@ -49,8 +49,10 @@ jobs:
       - name: Validate every plugin manifest
         run: find plugins/claude -path '*/.claude-plugin/plugin.json' -print0 | xargs -0 -n1 claude plugin validate --strict
 
+      # Claude's one plugin is plugins/claude itself, so its skills are at depth
+      # 1; an older layout with a plugin folder per region has them at depth 2.
       - name: Validate every plugin's skills
-        run: find plugins/claude -mindepth 2 -maxdepth 2 -type d -name skills -print0 | xargs -0 -n1 claude plugin validate --strict
+        run: find plugins/claude -mindepth 1 -maxdepth 2 -type d -name skills -print0 | xargs -0 -n1 claude plugin validate --strict
 
       # The Claude CLI checks only Claude plugins. For Codex, Cursor and
       # Cortex Code: every JSON file parses, every plugin folder has its
@@ -84,6 +86,11 @@ jobs:
           for host, manifest in MANIFESTS.items():
               host_dir = Path("plugins", host)
               plugins = sorted(p for p in host_dir.iterdir() if p.is_dir()) if host_dir.is_dir() else []
+              # Claude has one plugin, plugins/claude itself, not a folder per
+              # plugin inside it. The per-folder layout is still accepted until
+              # the first sync in the new one lands.
+              if host == "claude" and (host_dir / manifest).is_file():
+                  plugins = [host_dir]
               if host != "claude":
                   for f in sorted(host_dir.rglob("*.json")):
                       load(f)

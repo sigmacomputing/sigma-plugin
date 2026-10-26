@@ -51,7 +51,13 @@ jobs:
               for host_dir in sorted(Path("plugins").iterdir()):
                   if host_dir.name not in HOSTS:
                       raise SystemExit(f"plugins/{host_dir.name} isn't a known host: {sorted(HOSTS)}")
-                  for plugin in sorted(p for p in host_dir.iterdir() if p.is_dir()):
+                  folders = sorted(p for p in host_dir.iterdir() if p.is_dir())
+                  # Claude has one plugin, plugins/claude itself, not a folder
+                  # per plugin inside it. The per-folder layout is still
+                  # accepted until the first sync in the new one lands.
+                  if host_dir.name == "claude" and (host_dir / HOSTS["claude"]).is_file():
+                      folders = [host_dir]
+                  for plugin in folders:
                       manifest = plugin / HOSTS[host_dir.name]
                       if not manifest.is_file():
                           raise SystemExit(f"{plugin} has no {HOSTS[host_dir.name]}")
@@ -101,20 +107,29 @@ jobs:
           echo "exists=true" >> "$GITHUB_OUTPUT"
 
       # A Claude archive holds the plugin folder's contents, which is what an
-      # upload install expects. The other hosts' archives hold the folder
-      # itself, so unzipping one gives a folder to install from.
+      # upload install expects. When plugins/claude is itself the plugin, it is
+      # zipped once and named for the plugin in its manifest. The other hosts'
+      # archives hold the folder itself, so unzipping one gives a folder to
+      # install from.
       - name: Archive each plugin
         if: steps.released.outputs.exists == 'false'
         env:
           SLUG: ${{ steps.version.outputs.slug }}
         run: |
           mkdir dist
+          flat=""
+          if [ -f plugins/claude/.claude-plugin/plugin.json ]; then
+            flat=1
+            name="$(python3 -c "import json; print(json.load(open('plugins/claude/.claude-plugin/plugin.json'))['name'])")"
+            # -y stores a symlink as a link instead of following it.
+            (cd plugins/claude && zip -qry "../../dist/${name}-${SLUG}.claude.plugin" . -x '*.DS_Store')
+          fi
           for dir in plugins/*/*/; do
             host="$(basename "$(dirname "$dir")")"
             name="$(basename "$dir")"
-            # -y stores a symlink as a link instead of following it.
             case "$host" in
               claude)
+                [ -n "$flat" ] && continue # archived above
                 (cd "$dir" && zip -qry "../../../dist/${name}-${SLUG}.claude.plugin" . -x '*.DS_Store') ;;
               codex|cursor|coco)
                 (cd "plugins/$host" && zip -qry "../../dist/${name}-${SLUG}.${host}.zip" "$name" -x '*.DS_Store') ;;
