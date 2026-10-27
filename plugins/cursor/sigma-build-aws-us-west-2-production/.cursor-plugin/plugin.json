@@ -1,6 +1,6 @@
 {
   "name": "sigma-build-aws-us-west-2-production",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AWS US-West (Oregon): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"

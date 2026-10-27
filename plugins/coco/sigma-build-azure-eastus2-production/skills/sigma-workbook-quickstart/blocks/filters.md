@@ -108,4 +108,4 @@ main.set_padding(False)                 # structural — cards go inside it
   chronological/logical list, not whatever `query` returned.
 - `add_top_n_control` keeps the N highest rows of its numeric target
   (`bottom=True` the lowest). The default `ranking='rank'` keeps every tie, so
-  pass `ranking='row_number'` for exactly N.
+  set `ranking='row_number'` for exactly N.

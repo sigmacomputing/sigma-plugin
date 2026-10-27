@@ -1,6 +1,6 @@
 {
   "name": "sigma-build-aws-eu-central-1-production",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AWS EU (Frankfurt): Build finished Sigma dashboards and data apps from a conversation, connected to your Sigma organization.",
   "author": {
     "name": "Sigma Computing"
