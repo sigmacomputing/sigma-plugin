@@ -17,10 +17,8 @@ rank.set_series_color(top, SERIES)
 rank.dimension_axis().set_label_angle(0)
 rank.dimension_axis().set_marks('none')
 rank.value_axis().set_marks('none')
-rank.value_axis().set_show_labels(False)     # the labels on the bars carry the values
-dl = rank.data_labels()
-dl.set_visible(True)
-dl.set_color(BODY)
+rank.value_axis().set_show_labels(True)      # the axis carries the values
+rank.data_labels().set_visible(False)
 rank.legend().set_visible(False)
 rank.title_style().set_visible(False)
 rank.set_background_color(None)
@@ -29,9 +27,10 @@ rank.set_padding(False)
 
 - Adjust N in `sigma.filter.top_n(10)`; past ~12 bars give the card a taller
   frame rather than a smaller font.
-- The data labels sit outside the bars only while there is room: the longest
-  bar's label falls inside it, `BODY` on `SERIES`, which is unreadable. Give a
-  ranking a card of 14+ columns. Width is not enough when the values are close
-  — a ratio, a rate, a cost-per, anything whose smallest bar is over ~80% of
-  the largest puts every label inside — so for those, axis labels instead:
-  `rank.value_axis().set_show_labels(True)` and `dl.set_visible(False)`.
+- A blank in the entity column is its own `null` group, and a big one ranks
+  first as an unlabeled bar. Name the entities to keep —
+  `rank.get_column_by_name('<ENTITY>').set_filter(sigma.filter.values([...]))`
+  from a query ranked by the measure, not an arbitrary distinct list — or rank by a label column with no blanks.
+- Values read off the axis, not off the bars: a data label draws inside the
+  longest bar, `BODY` on `SERIES`, which is unreadable. It failed in a 10-wide
+  and a 14-wide card alike, so no width or value spread makes data labels safe.

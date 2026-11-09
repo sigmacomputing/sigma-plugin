@@ -57,7 +57,7 @@ g.set_calculation('Owner', sigma.formula.max(one.get_column_by_name('<OWNER>')))
 
 m = sigma.workbook.add_modal('Account detail')
 m.set_width('medium')
-m.set_header(title='Account detail', show_close_icon=True)
+m.set_title('Account detail')   # the name alone leaves "New Modal" in the header
 m.set_footer_buttons(primary_text='Done', show_primary=True, show_secondary=False)
 body = m.add_container()
 body.set_frame(1, 1, 12, 8)
@@ -139,7 +139,7 @@ opens.set_condition(sigma.formula.is_not_null(el))
 - **Drawer** instead — the same body, swapping the three opening lines for
   `drawer = sigma.workbook.add_drawer('Account detail')` ·
   `drawer.set_width('medium')` ·
-  `drawer.set_header(title='Account detail', show_close_icon=True)`, and
+  `drawer.set_title('Account detail')`, and
   `open_overlay(drawer)` on the row click or the picker. It has no footer,
   so its actions are buttons in the body (`blocks/queue.md`), and
   `set_width` takes only the three sizes above — a modal's `x_small`/`x_large` raise on one.

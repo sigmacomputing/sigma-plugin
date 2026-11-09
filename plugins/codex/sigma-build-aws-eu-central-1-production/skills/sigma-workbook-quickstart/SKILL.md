@@ -17,7 +17,7 @@ description: >-
   number or one chart — answer that inline with built-in visualization
   tools instead.
 metadata:
-  sdk-version: "1.1.0"
+  sdk-version: "8.1.0"
 ---
 
 **Environment:** `sigma` → `https://api.eu.aws.sigmacomputing.com/mcp/v2`
@@ -36,6 +36,7 @@ Never the REST API. One connector — the one named under **Environment** above
 | Tools | Use for |
 |---|---|
 | `begin_session`, `search`, `describe`, `query`, `list_documents` | Finding sources and probing data |
+| `get_changelog` | New capabilities and breaking SDK changes since this skill's SDK version (step 1) |
 | `build_workbook`, `screenshot`, `list_resources`, `read_resource` | Writing, seeing what rendered, reading SDK docs |
 
 If any tool fails with auth/401/403, ask the user to connect that connector.
@@ -59,7 +60,9 @@ errors, every fact they use is also a table below — skip them and keep going.
 
 ### 1 · Session
 
-`begin_session` (empty args) before anything else.
+`begin_session` (empty args) before anything else. Before calling `build_workbook` or `read_resource`, **always** call `get_changelog` with `{"version": "8.1.0"}`.
+
+The changelog will return changes to the SDK since the skills were last updated. If there's a conflict between a skill and the changelog, assume the changelog is correct. An empty result means nothing has changed. If it errors or is unavailable, carry on as written.
 
 ### 2 · Shape the workbook
 
@@ -173,11 +176,12 @@ and a long list of them corrupts quietly when one row is duplicated.
 - `query` the columns whose values the program will hardcode or split
   by — a filter or flag literal, a control default, a categorical color
   split, a date grain — and only those: distinct values with a `LIMIT`
-  of ~25, a date column's min/max, a Ledger's `COUNT(*)`. A guessed literal renders an empty
+  of ~25, ranked by the measure when the list names the top entities (a blank among them draws a `null` group — `set_filter(sigma.filter.values([None], exclude=True))`
+  on that dimension drops it), a date column's min/max, a Ledger's `COUNT(*)`. A guessed literal renders an empty
   chart. Three `FROM` paths, and the warehouse path errors: a `connection`
   query reads `FROM "connection"."<inode_id>"`, a `datamodel` query
   `FROM "datamodel"."<element_id>"`, a `workbook` query
-  `FROM "workbook"."<element_id>"` — that last one addresses columns by
+  `FROM "workbook"."<element_id>"` — those last two address columns by
   their **opaque ids**, so `describe` the element first; friendly labels do
   not bind there. The SQL is canonicalized ANSI: no `COUNT_IF`, `SUM_IF`,
   `IFF` or `QUALIFY` (`sigma.formula.count_if` exists in a program, the SQL
@@ -305,11 +309,16 @@ y = 7    # body y: the shell table
   full theme.
 
 End it with the state the next two steps need, one line each and nothing
-else: `page.id()|page.name()` per page, then
+else: `page.id()|page.name()` per page — the hidden data page too, with its base
+table's `id()` — then
 `host|el.id()|el.name()|el.frame()` per element — `host` is the page,
 container, or panel variable it was added to, because step 5 re-fetches from
-that host and from nowhere else. One `for` per host over its own children
-prints their shared methods (`id()`, `name()`, `frame()`) — never a list of
+that host and from nowhere else. One `for` over `page.list_elements()` prints
+their shared methods (`id()`, `name()`, `frame()`) — it lists every descendant
+(`flat=True`, the default), so a card's children come out with the page's and a
+second loop over the card prints them twice; `page.header()`, `page.sidebar()`
+and each overlay page are hosts of their own and take their own loop
+(`flat=False` lists a host's direct children only). Never a list of
 `(host, element)` pairs: a list of mixed tuple types fails to unpack. Each popover, drawer, and modal's children
 list under it. An overlay printing none never got filled — it opens blank;
 add its content. A program that skips this dump leaves steps 5 and 6 with no
@@ -330,10 +339,15 @@ has no frame to catch. It reads the state dump above too —
 without it (a failed call: `## Failure handling`):
 
 - Not full Python: no `class`/`lambda`/`while`/`with`/`assert`, no `**`,
-  no sets, slices on lists and tuples only (never a string), and list
-  comprehensions only, no generator expressions. An annotation needs an
-  element type: `x: list[str] = []`, never bare `list`. A
-  `def` needs annotated parameters and return — inline the calls instead.
+  no sets, slices on lists, tuples, and strings, and list or dict
+  comprehensions only, no set or generator expressions. An annotation needs an
+  element type: `x: list[str] = []`, never bare `list`. A `def` is allowed
+  at the top level only (not in a `def`, `if`, or loop), with plain annotated
+  parameters and an annotated return (`def f(page: Page, st: dict[str, str]) ->
+  int:`). It sees only its parameters and `sigma`, so pass the tokens, pages,
+  and tables in (`unknown identifier` is a top-level name read inside one).
+  `check.py` does not fold frames set inside one: set the frame of what it
+  returns outside it, and keep a card's inner rows within its height by hand.
   Builtins are just `print len int any enumerate zip range
   list reversed sorted min max str isinstance type datetime`, and the exceptions
   `Exception RuntimeError ValueError TypeError KeyError IndexError
@@ -357,6 +371,10 @@ without it (a failed call: `## Failure handling`):
   throwaway elements) — a throwaway persists on the page unless you
   `delete()` it. Input tables only as `blocks/input-table.md` shows them.
   Block handle names are per block — rename on a second use in one program.
+- A `datetime` literal in the creating call is read as UTC, in a later call as
+  the user's timezone — a control default or a `date_range` filter set there
+  starts hours off (`2025-06-01T00:00Z` shows as the evening before). Set
+  date literals in a later call (`blocks/filters.md`).
 - Anything no block demonstrates — a method, an argument, a construct — is
   read up before it is written (`## SDK docs`); a block using it is proof.
 
@@ -381,14 +399,16 @@ transient — retry once. Then an element shot for each table, pivot, or input
 grid whose rows matter.
 
 Shoot each **drawer or modal** once, as a page shot of its own id (the
-`<overlay>`): it ignores `pixelWidth` and anything inside it shoots blank. If
-it is rejected as too large, do not retry — look once through a preview: on one
-temporary visible page, re-add the tables and charts of every overlay that
-failed (same source, columns and frames; a drawer's grid is 12 columns), take
-**one** page shot of it, then `delete()` the page. That is the last shot for
-overlays. A wizard's later steps, and every card, control and action in an
-overlay, go unseen: report them as not looked at. A container's element shot
-errors `Not a visualization`.
+`<overlay>`): it ignores `pixelWidth` and renders what is inside it —
+charts, tables, cards, controls, forms. An element shot of a chart or table
+inside an overlay shoots blank, so read overlay content off the overlay's
+page shot. If it is rejected as too large, do not retry — look once through a
+preview: on one temporary visible page, re-add the tables and charts of every
+overlay that failed (same source, columns and frames; a drawer's grid is 12
+columns), take **one** page shot of it, then `delete()` the page. That is the
+last shot for overlays. Only the active tab renders, so a wizard's later steps
+go unseen: report them as not looked at. An element shot of a container, form
+or control errors `Not a visualization`.
 
 Walk each page top to bottom and **list every element with a verdict** —
 `el.name()`: what you see. A walk that reports prose, or "looks fine", is the
@@ -419,7 +439,9 @@ makes it, carrying the linked table's seed rows). Otherwise fix everything
 found, across every page, in one further call — it re-fetches what it
 touches, **from the host the step 4 dump named beside it**: `get_element`
 finds any descendant of the host it is called on, so a card's child comes off
-its container or an ancestor, a strip's button off `page.header()`, and an overlay off
+its container or an ancestor — `page.get_element(<id>)` straight off the page,
+never chained off another `get_element` result, which is a bare `Element` with
+no such method — a strip's button off `page.header()`, and an overlay off
 `sigma.workbook.get_page(<OVERLAY ID>)` — an overlay is not an element. A
 miss raises rather than returning `None`, so a fallback written after one
 never runs. `list_pages` and `get_page` both hand back `PageBase`, which has
@@ -427,10 +449,16 @@ no panel methods: narrow with `isinstance(p, Page)` before `set_sidebar` or
 `set_header` on a page you did not `add_page` yourself — the one case is
 extending a workbook the user already had. The panel is a second narrow, not
 the same one: `page.header()` and `page.sidebar()` return `Header | None`, so
-`get_element` on either needs its own `isinstance` after the page's. A re-fetched element is base `Element`, narrowed with
-`isinstance(el, <ItsClass>)` — `LevelTable`, `Repeater`, `Container`,
-`Button`, `KPI`, and the classes the blocks narrow to; a class named only in
-the SDK docs may not be bound (`unknown class` is that) — one class, on a **bare variable**
+`get_element` on either needs its own `isinstance` after the page's. The hidden
+data page's base table comes back the same way, with its page id and name and
+the base's id from the step 4 dump: `for p in sigma.workbook.list_pages():`, then
+inside the loop `if p.name() == '<DATA PAGE NAME>':` (`get_element` raises on a
+page that lacks the id), then `p.get_element(<BASE ID>)` and
+`isinstance(b, LevelTable)` — a variable set to `None` before the loop fails
+typecheck, and the base's id is an element id, never a page id. A re-fetched element is base `Element`, narrowed with
+`isinstance(el, <ItsClass>)` (bare class names, never `sigma.BarChart`) — `LevelTable`, `Repeater`, `Container`,
+`Button`, `KPI`, and the classes the blocks narrow to — any class in the SDK
+docs works; `unknown class` is a misspelled or non-SDK name — one class, on a **bare variable**
 (bind first; an inlined call narrows nothing). A height change moves every band
 below it — re-run the y-cursor over them in the same call. If that fix
 changed any height or y, screenshot those pages once more and repair what
@@ -501,8 +529,8 @@ Twelve tokens open every program (the fixed opening above): seven from a
 |---|---|
 | `CANVAS` | theme canvas |
 | `INK` | headlines, card labels, KPI values, lockup |
-| `BODY` | body copy, data labels, neutral-button text |
-| `MUTED` | sublines, KPI titles, table headers, nav, quiet buttons |
+| `BODY` | body copy, data labels outside the marks, neutral-button text |
+| `MUTED` | sublines, KPI titles, table headers, nav, quiet buttons; a category color of a split |
 | `HAIRLINE` | card, shell, and divider lines; settled-period shading |
 | `FILL` | neutral button fill, statement subtotal band |
 | `SERIES_GREY` | comparison / plan series |
@@ -629,9 +657,15 @@ Text content is markdown. These are the only sizes that exist; spans set
 Fourteen is the floor for text elements; a smaller label is an element's own
 title via `set_font_size`. KPI values are 24 bold, 30 on a loud band.
 
+Number formats: there is no `number_si` kind. A count in the
+millions or billions reads compact with `set_format_pattern('.2~S')` (`7.32B`),
+and `sigma.format.format_pattern('.2~S')` is the same format for a prose pair
+(`$.2~S` for compact currency).
+
 Dynamic values: `add_text(md, formulas={'Total revenue': (sigma.formula.sum(col), fmt)})`
 binds `{{Total revenue}}`, with `fmt = sigma.format.format('currency_si', 1, '$')`;
-use the base table's columns. A placeholder takes **no format spec** —
+use the base table's `get_column_by_name` columns (a `source.column(...)` fails
+typecheck). A placeholder takes **no format spec** —
 `{{Rev | $,.0f}}` is not parsed, it renders that literal string — and a bare
 aggregate renders raw, full-precision digits, so bind a `(formula, fmt)` pair
 for every number or date in prose. A value-list field takes no pair:
@@ -650,7 +684,9 @@ Element titles hidden — the card label does that job. Single measure =
 measure is itself a gain or a loss (retention, uptime / churn, attrition);
 a comparison series = `SERIES_GREY`; a categorical split
 only when the categories are the subject (≤6). Every date axis truncated
-to a grain and formatted; x labels never rotated. A rate, ratio, or
+to a grain and formatted, and ending at the last full period — a partial
+trailing one draws as a collapse (a date filter on the base, bounded from the
+`query` max date); x labels never rotated. A rate, ratio, or
 threshold measure never forces a zero baseline. Every KPI carries context
 (`blocks/kpi-row.md`).
 
@@ -663,16 +699,21 @@ the band's data, take the row the data matches:
 | a measure by an entity, 4–25 values | ranked horizontal bar, top-10 (`blocks/chart-ranked.md`) — never a sorted table |
 | two measures by a category ≤8 | grouped bars (`blocks/chart-compare.md`) |
 | a measure over a date split by a category ≤6 | stacked bars (`blocks/chart-composition.md`) |
-| a static split, ≤6 slices, no date on the band | donut (`blocks/chart-composition.md`) |
+| a static split, ≤6 slices, no date on the band — more categories: the top 5 plus `Other` | donut (`blocks/chart-composition.md`) |
 | tiers as separate measure columns | ribbon (`blocks/chart-composition.md`) |
 | a measure by two categoricals — ≤6 across, ≤12 down | heatmap (`blocks/pivot.md` `color_scale`), 14+ columns wide; hours as columns need all 24, so bucket to dayparts or take the wider frame |
 | an opening figure, signed steps, a closing figure — a bridge, variance walk, build-up | waterfall (`blocks/chart-waterfall.md`) |
+| stages narrowing in size, where how many get through each step is the question — leads to won, applicants to hires | funnel (`blocks/chart-funnel.md`) |
+| a measure split across two or three categorical steps, where the path is the question | sankey (`blocks/chart-sankey.md`) |
+| a volume that accumulates over a date, or a stacked or percent split over time where the filled mass is the point — the ask says area or running total | area (`blocks/chart-area.md`) |
+| two measures against each other across 15–200 entities — relationship or outliers, "X vs Y", correlation | scatter (`blocks/chart-scatter.md`) |
 | a measure by a lat/long pair, or by a named region — where, footprint, estate, by site | point or region map (`blocks/chart-map.md`) |
 
 `set_series_color`, `set_category_color`, `set_value_color`, and
 `color_scale` take `SERIES`, `SERIES_MID`, `SERIES_GREY`, or the ramp
 `TINT → SERIES_MID → SERIES` (good/bad for a gain-or-loss measure,
-`'#ffffff'` on a `PRIMARY` tile) — never `PRIMARY` or `INK` (the forecast
+`'#ffffff'` on a `PRIMARY` tile) — and `MUTED`, only as a category color of a
+split (`blocks/chart-composition.md` fixes the order) — never `PRIMARY` or `INK` (the forecast
 block's actual bars are the one `INK` series, and say so), and never
 `theme.highlight_color()`; every chart block sets its own colors.
 
@@ -698,6 +739,10 @@ freely; the styling calls stay as written, token names included.
 | Ranking (top-N) | `blocks/chart-ranked.md` |
 | Composition (stacked · donut) | `blocks/chart-composition.md` |
 | Waterfall — a bridge from an opening figure to a closing one | `blocks/chart-waterfall.md` |
+| Funnel — stages narrowing in size, with optional conversion rates | `blocks/chart-funnel.md` |
+| Sankey — a measure flowing across two or three categorical steps | `blocks/chart-sankey.md` |
+| Area — volume over time, stacked or percent split | `blocks/chart-area.md` |
+| Scatter — two measures across entities, optional bubble size | `blocks/chart-scatter.md` |
 | Map — points from coordinates · shaded named regions | `blocks/chart-map.md` |
 | Detail table + conditional formats · goals card (targets, quotas, budgets with a bar) | `blocks/table.md` |
 | Pivot (measure × two dimensions) | `blocks/pivot.md` |
@@ -722,17 +767,23 @@ For a need no block covers (for calculations, `blocks/formulas.md` comes
 first) — and only then: the `build_workbook` description's README, module,
 and connector-skill reads do not apply here. Compose a `<module>` URI from
 the scheme below — module names are the feature: `barChart`, `levelTable`,
-`inputTable`, `form`, `data/source`, `action/inputTableEffects`. The
-`skills/` names are a **closed set**, listed in the row below and nowhere
-else: a block is a block, never `sdk://skills/<block>/SKILL.md`. If a URI
-errors, `list_resources` once and take the name from what it lists.
+`inputTable`, `form`, `data/source`, `action/inputTableEffects`. A block is
+a block, never `sdk://skills/<block>/SKILL.md`. If a URI errors,
+`list_resources` once and take the name from what it lists.
 
 | Read | For |
 |---|---|
-| `sdk://sdk/reference/sigma/<module>.md` | every method on a class, typed signature, `Literal` variants — the read for any call the blocks do not show, and enough on its own |
-| `sdk://skills/<name>/SKILL.md` | a feature no block covers, and only these five — `forms`, `survey`, `relationship-columns`, `balance-sheet`, `maps` (region-type edge cases only — `blocks/chart-map.md` has the rest) |
+| `sdk://sdk/reference/sigma/<module>.md` | the index of a module: every class, method, typed signature, and `Literal` variant on one line each, with a `Full docs` pointer (`/sdk/sigma/<module>.py:<lines>`) — read it first for any call the blocks do not show |
+| `sdk://sdk/sigma/<module>.py` | the full docs behind those pointers — read it when a signature alone does not settle behavior, defaults, or errors |
+| `sdk://skills/<name>/SKILL.md` | a feature no block covers, from these five — `forms`, `survey`, `relationship-columns`, `balance-sheet`, `maps` (region-type edge cases only — `blocks/chart-map.md` has the rest) |
 
-Take only mechanics from those skills — their theme, styling, and layout
+The connector serves more skills (`dashboard`, `layout`, `style`, `charts`,
+`controls`, and others). This skill passes over them on purpose: they carry
+their own page architecture, grid, and styling, which would compete with the
+design system above, and `blocks/cards.md` and `blocks/tabs.md` already cover
+the repeater and tabbed container. Do not read them.
+
+Take only mechanics from the five — their theme, styling, and layout
 advice loses to the design system above. If an example in one fails
 because imports or `sigma.data.sql` are unavailable, do not retry it — take
 the mechanics from the module docs instead. Their
@@ -743,7 +794,8 @@ goes inside a program.
 
 - **Typecheck error** — nothing ran. Fix exactly what the error names and
   resubmit; do not restructure a working block around it.
-- **Runtime error** — the edits before it are committed. Recover in one
+- **Runtime error** — the edits before it are committed
+  (`runtime-error-with-partial-result`). Recover in one
   program (it opens with the token block too) against the returned id:
   bind `old = list_pages()` **first**,
   `add_page` the pages afresh, then `delete()` each page in `old` — a

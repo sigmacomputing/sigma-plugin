@@ -18,7 +18,7 @@ it.set_frame(1, 3, 24, 14)                     # 2 x rows + 2: a pill row is two
 i_name = it.add_editable_column('Request', 'text')
 i_amt = it.add_editable_column('Amount', 'number')
 i_date = it.add_editable_column('Needed by', 'datetime')
-i_status = it.add_single_select_column('Status', ['Pending', 'Approved', 'Rejected', 'Needs changes'])   # pills, coloured by option index — so only for a status vocabulary in that order; a neutral one (scenario, tier, region) is a plain text column
+i_status = it.add_single_select_column('Status', ['Pending', 'Approved', 'Rejected', 'Needs changes'], 'pill_single_color')   # the default colors pills by option position (blue, amber, red, …), not by meaning — Rejected would read as a warning, so the row colors below carry the meaning; a neutral vocabulary (scenario, tier, region) is a plain text column or 'plain_text'
 i_urgent = it.add_editable_column('Urgent', 'boolean')
 sys = it.add_system_columns(['row_id', 'created_at', 'created_by'])
 i_id = sys[0]

@@ -51,7 +51,7 @@ nav.set_alignment('right')
 nav.set_style('pill')
 nav.set_text_color(MUTED)
 nav.set_selected_color(PRIMARY)
-hc = header.add_container()                  # structural, but it keeps its gap — the picker and the trigger must not touch
+hc = header.add_container()                  # structural, but it keeps its gap — the picker and the trigger must not touch; its children's frames are in ITS inner grid, 24 columns of hc's own width
 hc.set_frame(16, 1, 9, 2)
 hc.set_column_density('high')
 hc.set_padding(False)
@@ -73,6 +73,14 @@ home.set_header(header)                      # every page the nav covers, one fo
 sigma.workbook.set_page_tabs_hidden_in_view_mode(True)
 ```
 
+- **No period or scenario column** (`describe` found none, the usual case for
+  order lines or events): build no `pick`, widen the nav and shrink `hc` to the
+  trigger alone —
+  `nav.set_frame(9, 1, 10, 2)` · `hc.set_frame(19, 1, 6, 2)` ·
+  `trig.set_frame(1, 1, 24, 2)` with `trig.set_align('right')`. A page-width
+  trigger frame (the `hc` width, 5) clips the label to "A.".
+- `home.set_header(header)` runs once per page the nav covers, each page with the
+  same `header`, and the header is added to any one of them (`scenarios` above).
 - The lockup is what the workbook is and for whom — `**Revenue planning** ·
   FY26`, `**Pipeline review** · Sales` — never an invented product name and
   never "Dashboard". A logo goes in front of it only when the user gives a

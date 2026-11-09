@@ -25,7 +25,8 @@ chatbot. Order it: **length cap first** ("Return your response as 1–2
 sentences."), the role, one `Ex:` sentence showing the register wanted, the
 data as `#KEY: ` sections joined with `ampersand`, then an explicit "no
 markdown, no asterisks". Serialize a column with
-`sigma.formula.list_agg(sigma.formula.text(col), ', ')`, and strip the
+`sigma.formula.list_agg(sigma.formula.text(col), ', ')` (a conditional goes
+inside as `text(if_(...))`), and strip the
 reply's quote artifacts with `sigma.formula.replace(summary,
 sigma.formula.const_text('"'), sigma.formula.const_text(''))`.
 
