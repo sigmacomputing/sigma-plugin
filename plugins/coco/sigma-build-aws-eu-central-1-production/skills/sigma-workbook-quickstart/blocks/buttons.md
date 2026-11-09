@@ -54,6 +54,10 @@ changes.set_font_color(BODY)
 - A page-title action sits at columns 14–24 — rows 4–5 under an in-page
   band, rows 2–3 when the title rows are 1–4 (the title block shifts up;
   stay clear of its full-width rule).
+- Other effects — reset controls (`clearControlEffect`, a "Reset filters"
+  button), set a control's value (`setControlValueEffect`, a preset button),
+  download an element, page, or workbook (`exportEffects`) — are in
+  `sdk://sdk/reference/sigma/action/<module>.md`.
 - Confirm a click: `seq.set_success_toast(title='Opening review')` (optional `message=`, `{{name}}` via `formulas=`).
 - A row click can branch on the clicked row's value:
   `tbl.on_select('open', [sigma.action.controlFlow.if_else([(sigma.action.condition.equals(tbl.get_column_by_name('<STATUS>'), 'Open'), [sigma.action.overlayEffects.open_overlay(drawer)])], [sigma.action.navigateEffect.navigate_to(done_page)])])`

@@ -52,7 +52,8 @@ k1.comparison_style().set_label_color(MUTED)
   latest period, the line the history behind it.
 - **Stat cards** — when each KPI carries its own one-line reading: one
   card per KPI instead of the shared band, `6` wide at x `1,7,13,19`,
-  height 6 — the section-card calls, the KPI above at `(1, 1, 24, 4)`, and
+  height 6 — the section-card calls (the card is 6 page columns wide but its
+  inner grid is 24, so its children span all 24), the KPI above at `(1, 1, 24, 4)`, and
   a `MUTED` `p-small` line at `(1, 5, 24, 2)` saying what the number means
   ("Trailing month against the one before."). Never mix the two shapes in
   one band. Each card repeats the `k1` calls under its own container
@@ -64,7 +65,10 @@ k1.comparison_style().set_label_color(MUTED)
   · `set_border(sigma.border.solid(radius='round'))` (no line — a loud surface)
   · value `#ffffff` at 30 · title `EDGE` (muted on the fill — ink and body
   go unreadable on it). A sparkline on the tile takes
-  `t.set_value_color('#ffffff')`. Everything else is the KPI above, minus
+  `t.set_value_color('#ffffff')`; a comparison takes `set_good_color('#ffffff')`,
+  `set_bad_color('#ffffff')` and `set_label_color(EDGE)` on its
+  `comparison_style()` (the red and green defaults are unreadable on the
+  fill), and a subline text takes `EDGE`. Everything else is the KPI above, minus
   `set_padding(False)` — the tile is its own surface, so it keeps its padding.
   A subline under the title has to be a text element inside the same
   structural wrapper: `description()` exists on tables and charts, **not**

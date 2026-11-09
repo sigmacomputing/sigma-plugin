@@ -23,7 +23,7 @@ ts.header_style().set_color(MUTED)
 for slot in [ts.header_style(), ts.cell_style()]:
     slot.set_background_color('#ffffff')
 tbl.title_style().set_visible(False)
-tbl.set_summary_bar(False)       # the row-count strip under the grid; SKILL.md's height rule assumes it off
+tbl.set_summary_bar(False)       # the column-totals row under the grid; SKILL.md's height rule assumes it off
 tbl.set_background_color(None)
 tbl.set_padding(False)
 

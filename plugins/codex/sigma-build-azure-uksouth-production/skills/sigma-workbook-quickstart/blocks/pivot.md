@@ -37,8 +37,11 @@ piv.set_padding(False)
   past that, truncate coarser or filter the range.
 - "Limit it to five rows" (any number): `sigma.filter.top_n` ranks the column it is applied
   to, so on a row dimension it silently keeps the alphabetically last N.
-  Query the N highest by value and filter the row column to them with
-  `sigma.filter.values([...])`.
+  With no column dimension, apply it to the value instead —
+  `piv.get_column_by_name('Sum of Amount').set_filter(sigma.filter.top_n(5))`
+  keeps the N highest. With a column dimension that filter blanks cells
+  instead of dropping rows, so query the N highest by value and filter the row
+  column to them with `sigma.filter.values([...])`.
 
 ## Rollup grid — no column dimension
 

@@ -34,7 +34,8 @@ rm.set_color_scale((sigma.formula.sum(rm.get_column_by_name('Revenue')), 'Total 
   match what the column actually holds — `query` the distinct values first;
   two-letter codes and full names are both accepted, mixed ones are not.
 - Never `set_background_color(None)` on a map: a transparent map renders its legend as a dark panel of dim, illegible text.
-- `set_color_scale` binds the measure; the gradient takes the workbook palette. To pin it, `mp.color_scale_scheme().set_palette([TINT, SERIES])` after binding.
+- `set_color_scale` binds the measure; the gradient takes the workbook palette. To pin it, `mp.color_scale_scheme().set_palette([TINT, SERIES])` after binding — exactly two colors
+  for a sequential ramp; a third makes it diverging.
 - Lat/long are **grouping keys**, so rows sharing a coordinate collapse into
   one mark and the measure aggregates across them — which is what you want
   per site, and wrong per transaction. If each row must be its own mark, the

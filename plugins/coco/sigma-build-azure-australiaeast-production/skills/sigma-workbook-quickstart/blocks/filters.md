@@ -5,8 +5,10 @@ from the base. Pick the control from the column's shape: few distinct
 values → segmented · many → list · date → `add_date_range_control` ·
 number → `add_number_range_control` · a single threshold → `add_slider_control(bar, value=50000, target=..., range=(0, 250000, 5000), compare_op='>=')`
 (`compare_op` is `'='`, `'<='`, or `'>='`) · boolean → `add_switch_control` ·
-the N highest rows of a number → `add_top_n_control(bar, value=5, target=..., ranking='row_number')` —
-all take `(host, value=, target=)` like the three below; a number-range
+the N highest rows of a number → `add_top_n_control(bar, value=5, target=..., ranking='row_number')` ·
+levels that nest (region → country → city) → `add_hierarchy_control`, below —
+all but the hierarchy take `(host, value=, target=)` like the three below (the
+hierarchy takes `hierarchy=` and `target=`); a number-range
 `value=` is a `(min, max)` tuple. A **type-to-find search box** over a name
 column is `add_text_control` with a `match_mode` — required on any surface a
 reader looks records up in (a table or card feed of deals, accounts,
@@ -27,6 +29,24 @@ surface (a queue, a card feed's `lst`). `match_mode` is `'contains'
 surface to one record — the table under a detail card (`blocks/detail.md`),
 the row an approval panel writes to (`blocks/plan-grid.md`) — not a search.
 Both text controls also run variable-only with no `target=`.
+
+## Nested levels — one tree, not a chain of lists
+
+Levels that nest (region → country → city, stage → feature set → feature) are
+one hierarchy control. Build the path as a column on `base`, broad level first,
+then target that column:
+
+```python
+path = base.add_column('<Path>', sigma.formula.ragged_hierarchy(base.get_column_by_name('<LEVEL 1>'), base.get_column_by_name('<LEVEL 2>'), base.get_column_by_name('<LEVEL 3>')))
+tree = sigma.control.add_hierarchy_control(bar, hierarchy=path, target=path)
+tree.set_name('<Region>')
+tree.set_frame(4, 1, 5, 2)            # a dropdown in one two-row slot, like any picker
+```
+
+- Pass `target=` as well as `hierarchy=`: with `hierarchy=` alone the control
+  filters nothing.
+- `mode='exclude'`, `show_all`, and `show_histogram` are further options of
+  `add_hierarchy_control` (`sdk://sdk/reference/sigma/control.md`).
 
 ## Toolbar — up to ~4 filters
 
@@ -99,7 +119,11 @@ main.set_padding(False)                 # structural — cards go inside it
   filtered-to-empty opening page is a build failure.
 - A date-range default is absolute datetimes —
   `value=(datetime(2026, 1, 1), datetime(2026, 6, 30))`; `datetime(y, m, d)`
-  is available bare. A rolling window ("last 90 days") cannot be a control
+  is available bare. Set it — and any `sigma.filter.date_range` filter on a
+  base column — in a **later** `build_workbook` call, not the one that creates
+  the workbook: there a naive `datetime` is read as UTC (later calls use the
+  user's timezone; tested, the same filter stores `T00:00Z` against `T07:00Z`) and
+  the range shows `12/31/2025 16:00` and loses a boundary day. A rolling window ("last 90 days") cannot be a control
   default — leave it unset, or flag rows with `sigma.formula.date_add`
   (`blocks/formulas.md`).
 - `target=` accepts a list to filter several base tables' columns at once

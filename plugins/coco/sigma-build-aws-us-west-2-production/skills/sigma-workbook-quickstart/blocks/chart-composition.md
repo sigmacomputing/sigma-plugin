@@ -12,7 +12,8 @@ mo.set_format_pattern('%b %Y')
 mix.set_dimension(mo)                          # columns never cross elements
 mix.set_series([(sigma.formula.sum(mix.get_column_by_name('Amount')), 'Total amount')])
 mix.set_color_category(mix.get_column_by_name('<CATEGORY>'))
-mix.set_category_color('<CATEGORY VALUE>', SERIES)   # one per value, largest first: SERIES SERIES_MID SERIES_GREY EDGE TINT — the donut's rule below
+mix.set_sort_by_series('color_category', mix.list_series()[0], True)   # smallest first: the largest sits on the baseline, and stack order = size rank
+mix.set_category_color('<CATEGORY VALUE>', SERIES)   # one per value, by size rank, largest first: SERIES SERIES_GREY MUTED EDGE SERIES_MID TINT — neighbors always differ; the donut's rule below
 mix.set_stacking('stacked')
 mix.dimension_axis().set_marks('none')
 mix.dimension_axis().set_label_angle(0)
@@ -39,23 +40,34 @@ d.get_column_by_name('Total').set_format('currency_si', decimals=1, currency='$'
 d.hole().set_size(0.7)
 d.legend().set_position('right')
 d.title_style().set_visible(False)
+d.set_sort_by_series('category', d.list_values()[0], False)   # largest slice first, clockwise from 12
 d.set_background_color(None)
 d.set_padding(False)
 ```
 
 - `hole().set_size` takes 0.4–0.8; the hole shows `'Total'` — the figure the
   slices are shares of.
+- Share labels on the slices: `d.data_labels().set_visible(True)` and
+  `d.set_label_style('percent')`.
+- **More than six categories**: group the tail into `Other` on the chart —
+  `cat = d.get_column_by_name('<CATEGORY>')` · `grp = d.add_column('<Category> group', sigma.formula.text(sigma.formula.if_(sigma.formula.in_(cat, sigma.formula.const_text('<A>'), sigma.formula.const_text('<B>'), …), cat, sigma.formula.const_text('Other'))))`
+  · `d.set_category(grp)`, with the top five names from a `query` ranked by the
+  measure. `Other` takes the color of its size rank like any slice, and
+  `set_category_color('Other', …)` names it.
 - Slice colors are set per category, as every chart sets its own:
   `d.set_category_color('<CATEGORY VALUE>', SERIES)` — one call per slice,
-  every slice named, largest first: `SERIES` `SERIES_MID` `SERIES_GREY`
-  `EDGE` `TINT`; none left to the workbook palette.
+  every slice named, by size rank, largest first: `SERIES` `SERIES_GREY`
+  `MUTED` `EDGE` `SERIES_MID` `TINT` (`MUTED` is a dark grey); none left to the
+  workbook palette. With the size sort above, slice order is color order, and
+  the sequence keeps the close pales `EDGE` and `TINT` apart.
 
 ## Ribbon — tiers that live in separate columns
 
 When the split is across **measures**, not a categorical column, drop the
 dimension entirely: one horizontal bar at `percent` stacking reads as a
-progress ribbon. This is the funnel/gauge shape — pipeline tiers, budget
-committed/spent/remaining, capacity used/free, roles filled/offered/open.
+progress ribbon. This is the progress/gauge shape — pipeline tiers, budget
+committed/spent/remaining, capacity used/free, roles filled/offered/open —
+a share of a whole, not stages narrowing (`blocks/chart-funnel.md`).
 
 **Difference nested tiers first** or the stack double-counts — if Commit
 already contains Closed won, stack the increments, not the raw tiers:

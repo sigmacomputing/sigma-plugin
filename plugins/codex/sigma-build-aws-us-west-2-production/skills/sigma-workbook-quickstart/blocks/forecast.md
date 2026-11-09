@@ -12,8 +12,7 @@ the editable forecast.
 spine = data_page.add_input_table('<CONNECTION_ID>')   # the source's own connection — a join needs both sides on one
 spine.set_name('Date spine')
 spine.set_frame(1, 13, 24, 6)
-s_month = spine.add_editable_column('Month', 'datetime')
-spine.upsert_rows([{s_month: datetime(2026, 10, 1, 12)}, {s_month: datetime(2026, 11, 1, 12)}, {s_month: datetime(2026, 12, 1, 12)}])   # 3 shown — seed every period of the horizon (12 months or 4–8 quarters), noon
+s_month = spine.add_editable_column('Month', 'datetime')   # seeded in call 2
 entities = data_page.add_table(src)                    # one row per entity
 entities.set_name('Families')
 entities.set_frame(1, 19, 24, 6)
@@ -40,6 +39,9 @@ fsrc.set_frame(1, 37, 24, 6)
 fsrc = data_page.get_element('<FSRC ID>')     # re-fetch, with the pages as blocks/input-table.md's call 2 opens
 if not isinstance(fsrc, LevelTable):
     raise RuntimeError('re-fetch')
+spine = data_page.get_element('<SPINE ID>')   # narrow with isinstance(spine, InputTable), and s_month with LiteralEditableColumn
+s_month = spine.get_column_by_name('Month')
+spine.upsert_rows([{s_month: datetime(2026, 10, 1, 12)}, {s_month: datetime(2026, 11, 1, 12)}, {s_month: datetime(2026, 12, 1, 12)}])   # 3 shown — seed every period of the horizon (12 months or 4–8 quarters), noon
 ft = sec.add_linked_input_table(fsrc.to_source(), lookup_columns={'<ENTITY>': 'Family', 'Month': 'Month'}, source_columns={'Actual revenue': 'Last year'})
 ft.set_name('Monthly forecast')
 ft.set_frame(1, 3, 24, 16)
@@ -63,6 +65,10 @@ ft.update_rows([                               # fam, mon from get_column_by_nam
 ])
 ```
 
+- Seed the spine in call 2, never call 1, so its `datetime` and these keys are
+  read the same way (SKILL.md's creating-call rule): a call-1 spine fails with
+  `no row matches the key`. Fallback: the stored instant as an ISO string from a
+  `query` of the grid. Both key columns are required.
 - A quarter grid uses `date_trunc('quarter', …)` and quarter-start seeds.
 - Everything else is `blocks/plan-grid.md` over `ft.to_source()` — KPI row,
   compare strip, submit and review wiring — with its columns mapped: `Plan` →

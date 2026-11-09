@@ -44,7 +44,8 @@ NON_ELEMENT = {
     "add_pivot_row", "add_pivot_column", "add_pivot_value", "add_ref_band",
     "add_metric", "add_formula", "add_trendline", "add_ref_line", "add_tab",
     "add_tables", "add_action", "add_ai_column", "add_folder", "add_field",
-    "add_relationship", "add_source_column",
+    "add_relationship", "add_source_column", "add_relationship_columns",
+    "add_single_select_column", "add_multi_select_column",
 }
 OVERLAY = {"add_popover", "add_modal", "add_drawer"}
 PANEL = {"add_header", "add_sidebar"}
@@ -125,14 +126,43 @@ def check_dialect(tree, source, findings):
     token_names = set(design["tokens"]) if design else set()
     type_names = collect_type_names(tree)
     guarded = collect_guarded_calls(tree)
+    top_level_defs = {id(n) for n in tree.body if isinstance(n, ast.FunctionDef)}
+    module_vars = {
+        n.id
+        for stmt in tree.body
+        if not isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        for n in ast.walk(stmt)
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)
+    }
+    for fn in tree.body:
+        if not isinstance(fn, ast.FunctionDef):
+            continue
+        local = {a.arg for a in fn.args.args}
+        for stmt in fn.body:
+            for n in ast.walk(stmt):
+                if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
+                    local.add(n.id)
+        reported = set()
+        for stmt in fn.body:
+            for n in ast.walk(stmt):
+                if (isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
+                        and n.id in module_vars and n.id not in local
+                        and n.id not in reported):
+                    reported.add(n.id)
+                    findings.append(Finding("ERROR", n.lineno, "def-global-read",
+                        f"`{n.id}` is read inside a `def` but defined outside it — "
+                        "a `def` sees only its parameters and `sigma`, so pass it in"))
 
     for node in ast.walk(tree):
         line = getattr(node, "lineno", None)
 
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             findings.append(Finding("WARN", line, "def-unchecked",
-                "frames inside a `def` are not folded here, and the runtime needs "
-                "every parameter and the return annotated — inline the calls"))
+                "frames set inside a `def` are not folded here — set the frame of "
+                "what it returns outside it, and keep inner rows in the card by hand"))
+            if id(node) not in top_level_defs:
+                findings.append(Finding("ERROR", line, "def-nested",
+                    "function definitions are only allowed at the top level"))
             parameters = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
             if node.returns is None or any(p.annotation is None for p in parameters):
                 findings.append(Finding("ERROR", line, "def-unannotated",
@@ -423,6 +453,18 @@ def collect_assigned(tree):
 def collect_dicts(tree):
     """Names assigned a dict literal or dict comprehension — `x['k']` is real there."""
     names = set()
+
+    def is_dict_annotation(annotation):
+        base = annotation.value if isinstance(annotation, ast.Subscript) else annotation
+        return isinstance(base, ast.Name) and base.id == "dict"
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.arg) and node.annotation is not None \
+                and is_dict_annotation(node.annotation):
+            names.add(node.arg)
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) \
+                and is_dict_annotation(node.annotation):
+            names.add(node.target.id)
     assigns = [n for n in ast.walk(tree) if isinstance(n, ast.Assign)]
     changed = True
     while changed:
@@ -624,8 +666,11 @@ def check_layout(model, findings):
 
     for host, children in by_host.items():
         framed = [child for child in children if child.frame]
+        # A frame built from a loop variable cannot be folded, so the rows it
+        # covers look empty: the checks that read an absence stand down.
+        has_unfoldable = any(child.unfoldable for child in children)
         check_overlaps(host, framed, findings)
-        check_host_fit(model, host, framed, findings)
+        check_host_fit(model, host, framed, findings, has_unfoldable)
 
 
 def check_overlaps(host, framed, findings):
@@ -643,7 +688,7 @@ def rectangles_overlap(a, b):
     return ax < bx + bw and bx < ax + aw and ay < by + bh and by < ay + ah
 
 
-def check_host_fit(model, host, framed, findings):
+def check_host_fit(model, host, framed, findings, has_unfoldable=False):
     if not framed:
         return
     grid = (load_design_system() or {}).get("grid", {})
@@ -658,12 +703,12 @@ def check_host_fit(model, host, framed, findings):
             findings.append(Finding("ERROR", element.frame_line, "child-overruns-host",
                 f"a child of `{host}` ends on row {bottom} but its inner grid has "
                 f"{rows} — it grows the host and pushes the bands below it down"))
-        elif bottom < rows and not sized_to_something_else(element, rows, grid):
+        elif bottom < rows and not has_unfoldable and not sized_to_something_else(element, rows, grid):
             findings.append(Finding("WARN", element.frame_line, "trailing-empty-row",
                 f"`{host}` spans {rows} rows but its last child ends on row "
                 f"{bottom} — a reserved row renders as a visible gap"))
 
-    if element is None or element.kind in PAGE:
+    if (element is None or element.kind in PAGE) and not has_unfoldable:
         for low, high in uncovered_runs(framed):
             findings.append(Finding("WARN", framed[0].frame_line, "blank-rows",
                 f"rows {low}-{high} on `{host}` hold nothing — the y-cursor leaves "

@@ -6,7 +6,7 @@ tabbed container holds the steps, marker buttons walk them.
 ```python
 wiz = sigma.workbook.add_modal('New scenario')
 wiz.set_width('large')
-wiz.set_header(title='', show_close_icon=True)   # the body carries the title
+wiz.set_show_title(False)   # the body carries the title
 wiz.set_footer_buttons(show_primary=False, show_secondary=False)  # per-tab nav instead
 wt = wiz.add_text('<p class="p-large">**<New scenario>**</p>')
 wt.set_frame(1, 1, 12, 2)
@@ -101,7 +101,7 @@ done.set_appearance('solid')
 done.set_shape('round')
 done.set_fill_color(PRIMARY)
 done.set_font_color('#ffffff')
-done.on_click('close', [sigma.action.overlayEffects.close_overlay()])
+done.on_click('close', [sigma.action.clearControlEffect.clear_control(wiz), sigma.action.overlayEffects.close_overlay()])
 
 opener = page.add_button('+ New scenario')
 opener.set_frame(19, 2, 6, 2)              # title rows 1–4; under a single-page header band the title is rows 3–6: (19, 4, 6, 2)
@@ -126,7 +126,7 @@ the insert.
 ```python
 m = sigma.workbook.add_modal('New goal')
 m.set_width('small')
-m.set_header(title='Set a new milestone', show_close_icon=True)
+m.set_title('Set a new milestone')
 m.set_footer_buttons(show_primary=False, show_secondary=False)   # the form's submit is the footer
 form = m.add_form(it)
 form.set_frame(1, 1, 12, 16)                 # 3 rows per field + 4
@@ -145,7 +145,7 @@ cancel.set_appearance('text')
 cancel.set_align('stretch')
 cancel.set_font_color(MUTED)
 cancel.set_bold(False)
-cancel.on_click('cancel', [sigma.action.overlayEffects.close_overlay()])
+cancel.on_click('cancel', [sigma.action.clearControlEffect.clear_control(m), sigma.action.overlayEffects.close_overlay()])
 m.on_close('reset', [sigma.action.clearControlEffect.clear_control(m)])
 opener.on_click('new', [sigma.action.overlayEffects.open_overlay(m)])   # opener: blocks/buttons.md — a title-row action, or a card's soft button
 ```
@@ -156,7 +156,8 @@ Field defaults and dropdown presentation as `blocks/intake.md` shows.
   them as they change; keep it to a few lines and the actions.
 - Replace the `done.on_click('close', …)` line to commit the controls as a
   row — controls are action values:
-  `done.on_click('save', [sigma.action.inputTableEffects.insert_row(it, {i_name: nm, i_case: case}), sigma.action.refreshElementEffect.refresh_element(it), sigma.action.overlayEffects.close_overlay()])`
+  `done.on_click('save', [sigma.action.inputTableEffects.insert_row(it, {i_name: nm, i_case: case}), sigma.action.clearControlEffect.clear_control(wiz), sigma.action.refreshElementEffect.refresh_element(it), sigma.action.overlayEffects.close_overlay()])`
   (`it` from `blocks/input-table.md`; `i_case` a single-select column added
-  for the case), then a toast on the sequence. Close resets the inputs:
-  `wiz.on_close('reset', [sigma.action.clearControlEffect.clear_control(wiz)])`.
+  for the case), then a toast on the sequence. `on_close` (the fence's reset)
+  runs only when the modal is dismissed by hand, so each button clears the
+  inputs itself, after the write and before `close_overlay`.
